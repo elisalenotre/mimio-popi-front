@@ -1,0 +1,116 @@
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { signUpWithEmail } from "../services/authService";
+import { isStrongPassword, isValidEmail, normalizeEmail } from "../services/validation";
+
+function mapSupabaseSignupError(message: string) {
+  const msg = message.toLowerCase();
+
+  if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+    return "Cet email est déjà utilisé. Tu peux plutôt te connecter.";
+  }
+
+  return "Impossible de créer ton compte pour le moment. Réessaie dans un instant.";
+}
+
+export default function SignUpPage() {
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+
+  const [showPwd, setShowPwd] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    const cleanedEmail = normalizeEmail(email);
+
+    // --- Validations US0.1 ---
+    if (!cleanedEmail) return setError("Email obligatoire.");
+    if (!isValidEmail(cleanedEmail)) return setError("Oups, cet email ne semble pas valide.");
+    if (!password) return setError("Mot de passe obligatoire.");
+    if (!isStrongPassword(password)) return setError("Ton mot de passe doit faire au moins 8 caractères.");
+    if (!confirm) return setError("Confirmation du mot de passe obligatoire.");
+    if (confirm !== password) return setError("Les mots de passe ne correspondent pas.");
+
+    try {
+      setSubmitting(true);
+
+      const { error: signUpError } = await signUpWithEmail(cleanedEmail, password);
+
+      if (signUpError) {
+        setError(mapSupabaseSignupError(signUpError.message));
+        setPassword(""); setConfirm("");
+        return;
+      }
+
+      // Redirection: onboarding (US0.5) ou home
+      navigate("/onboarding", { replace: true });
+    } catch {
+      setError("Impossible de créer ton compte pour le moment. Réessaie dans un instant.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <main>
+      <h1>Créer un compte</h1>
+
+      {error && <p role="alert">{error}</p>}
+
+      <form onSubmit={handleSubmit}>
+        <label>
+          Email
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            inputMode="email"
+          />
+        </label>
+
+        <label>
+          Mot de passe
+          <input
+            type={showPwd ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+          />
+        </label>
+
+        <button type="button" onClick={() => setShowPwd((v) => !v)}>
+          {showPwd ? "Masquer" : "Afficher"}
+        </button>
+
+        <label>
+          Confirmation du mot de passe
+          <input
+            type={showPwd ? "text" : "password"}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            autoComplete="new-password"
+          />
+        </label>
+
+        <button type="submit" disabled={submitting}>
+          {submitting ? "Création..." : "Créer mon compte"}
+        </button>
+      </form>
+
+      <p>
+        Déjà un compte ? <Link to="/login">Se connecter</Link>
+      </p>
+
+      <p>
+        <Link to="/privacy">Confidentialité</Link>
+      </p>
+    </main>
+  );
+}
