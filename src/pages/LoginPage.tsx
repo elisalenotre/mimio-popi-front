@@ -61,6 +61,10 @@ export default function LoginPage() {
       </form>
 
       <p>
+        <Link to="/forgot-password">Mot de passe oublié ?</Link>
+      </p>
+
+      <p>
         Pas de compte ? <Link to="/signup">Créer un compte</Link>
       </p>
     </main>

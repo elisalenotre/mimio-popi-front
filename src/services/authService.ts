@@ -4,8 +4,9 @@ export async function signUpWithEmail(email: string, password: string) {
   return supabase.auth.signUp({
     email,
     password,
-    // optionnel pour rediriger l'utilisateur après la confirmation de son email
-    //{ emailRedirectTo: `${window.location.origin}/auth/callback` }
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+    },
   });
 }
 
@@ -15,4 +16,14 @@ export async function signInWithEmail(email: string, password: string) {
 
 export async function signOut() {
   return supabase.auth.signOut();
+}
+
+export async function requestPasswordReset(email: string) {
+  return supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth/callback`,
+  });
+}
+
+export async function updatePassword(newPassword: string) {
+  return supabase.auth.updateUser({ password: newPassword });
 }
