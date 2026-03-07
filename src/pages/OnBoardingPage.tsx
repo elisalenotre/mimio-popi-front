@@ -57,8 +57,7 @@ export default function OnboardingPage() {
     try {
       setSubmitting(true);
       await saveOnboarding(answers);
-      // message fin + redirection
-      navigate("/", { replace: true });
+      navigate("/settings", { replace: true });
     } catch {
       setError("Impossible d’enregistrer pour le moment. Réessaie dans un instant.");
     } finally {

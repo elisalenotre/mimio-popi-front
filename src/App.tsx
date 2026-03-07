@@ -1,8 +1,9 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Link } from "react-router-dom";
 
 import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnBoardingPage";
+import SettingsPage from "./pages/SettingsPage";
 
 import { RequireOnboarding } from "./components/RequireOnBoarding";
 import { useAuth } from "./contexts/AuthContext";
@@ -19,7 +20,15 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 
 // Placeholders (tu remplaceras par tes vraies pages)
 function HomePage() {
-  return <div>Home (placeholder)</div>;
+  return (
+    <main>
+      <h1>Accueil</h1>
+      <p>Tu es connecte. Tu peux gerer ton profil dans les parametres.</p>
+      <p>
+        <Link to="/settings">Aller aux parametres</Link>
+      </p>
+    </main>
+  );
 }
 
 function PrivacyPage() {
@@ -50,6 +59,16 @@ export default function App() {
         element={
           <RequireOnboarding>
             <HomePage />
+          </RequireOnboarding>
+        }
+      />
+
+      {/* Settings (auth + onboarding required) */}
+      <Route
+        path="/settings"
+        element={
+          <RequireOnboarding>
+            <SettingsPage />
           </RequireOnboarding>
         }
       />

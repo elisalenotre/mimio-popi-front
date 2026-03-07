@@ -10,15 +10,17 @@ export function RequireOnboarding({ children }: { children: JSX.Element }) {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) return;
+    if (!user) {
+      setChecking(false);
+      setCompleted(null);
+      return;
+    }
 
     (async () => {
       try {
         const profile = await getMyProfile();
 
         const isCompleted = Boolean(profile.onboarding_completed);
-
-
         setCompleted(isCompleted);
       } catch {
         setCompleted(true);
