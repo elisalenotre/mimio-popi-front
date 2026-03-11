@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { signUpWithEmail } from "../services/authService";
 import { isStrongPassword, isValidEmail, normalizeEmail } from "../services/validation";
+import mimioMascot from "../assets/mimio-ok.svg";
+import popiMascot from "../assets/popi.svg";
 
 function mapSupabaseSignupError(message: string) {
   const msg = message.toLowerCase();
@@ -59,58 +61,79 @@ export default function SignUpPage() {
   };
 
   return (
-    <main>
-      <h1>Créer un compte</h1>
+    <article className="auth-shell">
+      <div className="retro-brand-wrap">
+        <img className="retro-mascot retro-mascot--left" src={mimioMascot} alt="Mascotte Mimio" />
+        <h1 className="retro-brand" aria-label="Mimio et Popi">
+          <span className="retro-brand__char">M</span>
+          <span className="retro-brand__char">i</span>
+          <span className="retro-brand__char">m</span>
+          <span className="retro-brand__char">i</span>
+          <span className="retro-brand__char">o</span>
+          <span className="retro-brand__char retro-brand__space">&nbsp;</span>
+          <span className="retro-brand__char">&amp;</span>
+          <span className="retro-brand__char retro-brand__space">&nbsp;</span>
+          <span className="retro-brand__char">P</span>
+          <span className="retro-brand__char">o</span>
+          <span className="retro-brand__char">p</span>
+          <span className="retro-brand__char">i</span>
+        </h1>
+        <img className="retro-mascot retro-mascot--right" src={popiMascot} alt="Mascotte Popi" />
+      </div>
 
-      {error && <p role="alert">{error}</p>}
+      <main>
+        <h2>Créer un compte</h2>
 
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            inputMode="email"
-          />
-        </label>
+        {error && <p role="alert">{error}</p>}
 
-        <label>
-          Mot de passe
-          <input
-            type={showPwd ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="new-password"
-          />
-        </label>
+        <form onSubmit={handleSubmit}>
+          <label>
+            Email
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              inputMode="email"
+            />
+          </label>
 
-        <button type="button" onClick={() => setShowPwd((v) => !v)}>
-          {showPwd ? "Masquer" : "Afficher"}
-        </button>
+          <label>
+            Mot de passe
+            <input
+              type={showPwd ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+            />
+          </label>
 
-        <label>
-          Confirmation du mot de passe
-          <input
-            type={showPwd ? "text" : "password"}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            autoComplete="new-password"
-          />
-        </label>
+          <button type="button" onClick={() => setShowPwd((v) => !v)}>
+            {showPwd ? "Masquer" : "Afficher"}
+          </button>
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Création..." : "Créer mon compte"}
-        </button>
-      </form>
+          <label>
+            Confirmation du mot de passe
+            <input
+              type={showPwd ? "text" : "password"}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              autoComplete="new-password"
+            />
+          </label>
 
-      <p>
-        Déjà un compte ? <Link to="/login">Se connecter</Link>
-      </p>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Création..." : "Créer mon compte"}
+          </button>
+        </form>
 
-      <p>
-        <Link to="/privacy">Confidentialité</Link>
-      </p>
-    </main>
+        <p>
+          Déjà un compte ? <Link to="/login">Se connecter</Link>
+        </p>
+
+        <p>
+          <Link to="/privacy">Confidentialité</Link>
+        </p>
+      </main>
+    </article>
   );
 }

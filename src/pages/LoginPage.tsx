@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { signInWithEmail } from "../services/authService";
 import { isValidEmail, normalizeEmail } from "../services/validation";
+import mimioMascot from "../assets/mimio-ok.svg";
+import popiMascot from "../assets/popi.svg";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -35,38 +37,59 @@ export default function LoginPage() {
   };
 
   return (
-    <main>
-      <h1>Se connecter</h1>
-      {error && <p role="alert">{error}</p>}
+    <article className="auth-shell">
+      <div className="retro-brand-wrap">
+        <img className="retro-mascot retro-mascot--left" src={mimioMascot} alt="Mascotte Mimio" />
+        <h1 className="retro-brand" aria-label="Mimio et Popi">
+          <span className="retro-brand__char">M</span>
+          <span className="retro-brand__char">i</span>
+          <span className="retro-brand__char">m</span>
+          <span className="retro-brand__char">i</span>
+          <span className="retro-brand__char">o</span>
+          <span className="retro-brand__char retro-brand__space">&nbsp;</span>
+          <span className="retro-brand__char">&amp;</span>
+          <span className="retro-brand__char retro-brand__space">&nbsp;</span>
+          <span className="retro-brand__char">P</span>
+          <span className="retro-brand__char">o</span>
+          <span className="retro-brand__char">p</span>
+          <span className="retro-brand__char">i</span>
+        </h1>
+        <img className="retro-mascot retro-mascot--right" src={popiMascot} alt="Mascotte Popi" />
+      </div>
 
-      <form onSubmit={handleSubmit}>
-        <label>
-          Email
-          <input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-        </label>
+      <main>
+        <h2>Se connecter</h2>
+        {error && <p role="alert">{error}</p>}
 
-        <label>
-          Mot de passe
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-          />
-        </label>
+        <form onSubmit={handleSubmit}>
+          <label>
+            Email
+            <input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+          </label>
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Connexion..." : "Se connecter"}
-        </button>
-      </form>
+          <label>
+            Mot de passe
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </label>
 
-      <p>
-        <Link to="/forgot-password">Mot de passe oublié ?</Link>
-      </p>
+          <button type="submit" disabled={submitting}>
+            {submitting ? "Connexion..." : "Se connecter"}
+          </button>
+        </form>
 
-      <p>
-        Pas de compte ? <Link to="/signup">Créer un compte</Link>
-      </p>
-    </main>
+        <p>
+          <Link to="/forgot-password">Mot de passe oublié ?</Link>
+        </p>
+
+        <p>
+          Pas de compte ? <Link to="/signup">Créer un compte</Link>
+        </p>
+      </main>
+    </article>
   );
 }
