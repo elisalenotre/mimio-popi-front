@@ -1,35 +1,86 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route, Navigate, Link } from "react-router-dom";
 
-function App() {
-  const [count, setCount] = useState(0)
+import SignUpPage from "./pages/auth/SignUpPage";
+import LoginPage from "./pages/auth/LoginPage";
+import AuthCallbackPage from "./pages/auth/AuthCallbackPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import OnboardingPage from "./pages/params/OnBoardingPage";
+import SettingsPage from "./pages/params/SettingsPage";
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+import { RequireOnboarding } from "./components/RequireOnBoarding";
+import { useAuth } from "./contexts/AuthContext";
+import type { JSX } from "react";
+
+function ProtectedRoute({ children }: { children: JSX.Element }) {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div>Chargement...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+
+  return children;
 }
 
-export default App
+// Placeholders (tu remplaceras par tes vraies pages)
+function HomePage() {
+  return (
+    <main>
+      <h1>Accueil</h1>
+      <p>Tu es connecte. Tu peux gerer ton profil dans les parametres.</p>
+      <p>
+        <Link to="/settings">Aller aux parametres</Link>
+      </p>
+    </main>
+  );
+}
+
+function PrivacyPage() {
+  return <div>Confidentialité (placeholder MVP)</div>;
+}
+
+export default function App() {
+  return (
+    <Routes>
+      {/* Public */}
+      <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+
+      {/* Auth required */}
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <OnboardingPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Auth + Onboarding required */}
+      <Route
+        path="/"
+        element={
+          <RequireOnboarding>
+            <HomePage />
+          </RequireOnboarding>
+        }
+      />
+
+      {/* Settings (auth + onboarding required) */}
+      <Route
+        path="/settings"
+        element={
+          <RequireOnboarding>
+            <SettingsPage />
+          </RequireOnboarding>
+        }
+      />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
