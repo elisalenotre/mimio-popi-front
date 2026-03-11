@@ -164,7 +164,6 @@ h2 {
   width: clamp(42px, 6.6vw, 68px);
   --sticker-x: 28%;
   --sticker-rot: 12deg;
-  --sticker-scale-x: -1;
 }
 
 .retro-brand__char {
