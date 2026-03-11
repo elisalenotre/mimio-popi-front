@@ -227,6 +227,16 @@ label {
   font-weight: 500;
 }
 
+/* Keep text inputs on a stacked label layout, but align toggles inline. */
+label:has(input[type="radio"]),
+label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  line-height: 1.2;
+}
+
 input,
 select,
 textarea {
@@ -315,7 +325,9 @@ hr {
 input[type="radio"],
 input[type="checkbox"] {
   width: auto;
-  margin-right: 0.4rem;
+  margin: 0;
+  flex: 0 0 auto;
+  vertical-align: middle;
   accent-color: var(--coral);
 }
 
