@@ -48,12 +48,12 @@ export async function skipOnboarding() {
   const profile = await getMyProfile();
   const nextPreferences = {
     ...(profile.preferences ?? {}),
-    onboarding_completed: false,
+    onboarding_completed: true,
   };
 
   await updateProfile({
     preferences: nextPreferences,
-    onboarding_completed: false,
+    onboarding_completed: true,
   });
 }
 

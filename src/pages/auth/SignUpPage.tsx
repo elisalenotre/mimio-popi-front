@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { signUpWithEmail } from "../../services/authService";
+import { signInWithGoogle, signUpWithEmail } from "../../services/authService";
 import { isStrongPassword, isValidEmail, normalizeEmail } from "../../services/validation";
-import mimioMascot from "../assets/mimio-ok.svg";
-import popiMascot from "../assets/popi.svg";
+import mimioMascot from "../../assets/mimio-ok.svg";
+import popiMascot from "../../assets/popi.svg";
 
 function mapSupabaseSignupError(message: string) {
   const msg = message.toLowerCase();
@@ -55,6 +55,22 @@ export default function SignUpPage() {
       navigate("/onboarding", { replace: true });
     } catch {
       setError("Impossible de créer ton compte pour le moment. Réessaie dans un instant.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+
+    try {
+      setSubmitting(true);
+      const { error: googleError } = await signInWithGoogle();
+      if (googleError) {
+        setError("Connexion Google indisponible pour le moment. Réessaie dans un instant.");
+      }
+    } catch {
+      setError("Connexion Google indisponible pour le moment. Réessaie dans un instant.");
     } finally {
       setSubmitting(false);
     }
@@ -125,6 +141,14 @@ export default function SignUpPage() {
             {submitting ? "Création..." : "Créer mon compte"}
           </button>
         </form>
+
+        <p className="auth-separator" aria-hidden="true">
+          ou
+        </p>
+
+        <button type="button" className="oauth-button" onClick={handleGoogleSignIn} disabled={submitting}>
+          {submitting ? "Connexion..." : "Continuer avec Google"}
+        </button>
 
         <p>
           Déjà un compte ? <Link to="/login">Se connecter</Link>

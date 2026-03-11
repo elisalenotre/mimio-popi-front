@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { signInWithEmail } from "../../services/authService";
+import { signInWithEmail, signInWithGoogle } from "../../services/authService";
 import { isValidEmail, normalizeEmail } from "../../services/validation";
-import mimioMascot from "../assets/mimio-ok.svg";
-import popiMascot from "../assets/popi.svg";
+import mimioMascot from "../../assets/mimio-ok.svg";
+import popiMascot from "../../assets/popi.svg";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -31,6 +31,22 @@ export default function LoginPage() {
       navigate("/", { replace: true });
     } catch {
       setError("Impossible de te connecter pour le moment. Réessaie dans un instant.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+
+    try {
+      setSubmitting(true);
+      const { error: googleError } = await signInWithGoogle();
+      if (googleError) {
+        setError("Connexion Google indisponible pour le moment. Réessaie dans un instant.");
+      }
+    } catch {
+      setError("Connexion Google indisponible pour le moment. Réessaie dans un instant.");
     } finally {
       setSubmitting(false);
     }
@@ -81,6 +97,14 @@ export default function LoginPage() {
             {submitting ? "Connexion..." : "Se connecter"}
           </button>
         </form>
+
+        <p className="auth-separator" aria-hidden="true">
+          ou
+        </p>
+
+        <button type="button" className="oauth-button" onClick={handleGoogleSignIn} disabled={submitting}>
+          {submitting ? "Connexion..." : "Continuer avec Google"}
+        </button>
 
         <p>
           <Link to="/forgot-password">Mot de passe oublié ?</Link>
