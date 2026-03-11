@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { signUpWithEmail } from "../services/authService";
-import { isStrongPassword, isValidEmail, normalizeEmail } from "../services/validation";
+import { signUpWithEmail } from "../../services/authService";
+import { isStrongPassword, isValidEmail, normalizeEmail } from "../../services/validation";
 import mimioMascot from "../assets/mimio-ok.svg";
 import popiMascot from "../assets/popi.svg";
 

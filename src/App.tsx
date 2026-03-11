@@ -1,12 +1,12 @@
 import { Routes, Route, Navigate, Link } from "react-router-dom";
 
-import SignUpPage from "./pages/SignUpPage";
-import LoginPage from "./pages/LoginPage";
-import AuthCallbackPage from "./pages/AuthCallbackPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import OnboardingPage from "./pages/OnBoardingPage";
-import SettingsPage from "./pages/SettingsPage";
+import SignUpPage from "./pages/auth/SignUpPage";
+import LoginPage from "./pages/auth/LoginPage";
+import AuthCallbackPage from "./pages/auth/AuthCallbackPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import OnboardingPage from "./pages/params/OnBoardingPage";
+import SettingsPage from "./pages/params/SettingsPage";
 
 import { RequireOnboarding } from "./components/RequireOnBoarding";
 import { useAuth } from "./contexts/AuthContext";

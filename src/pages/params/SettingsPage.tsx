@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMyProfile, resetOnboardingFlag, updateProfile } from "../services/profileService";
-import { isValidDisplayName, normalizeDisplayName } from "../services/profileValidation";
-import type { Preferences, MascotMessageIntensity } from "../types/preferences";
-import { signOut } from "../services/authService";
+import { getMyProfile, resetOnboardingFlag, updateProfile } from "../../services/profileService";
+import { isValidDisplayName, normalizeDisplayName } from "../../services/profileValidation";
+import type { Preferences, MascotMessageIntensity } from "../../types/preferences";
+import { signOut } from "../../services/authService";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
