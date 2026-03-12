@@ -1,11 +1,17 @@
 import { supabase } from "../lib/supabaseClient";
 
+function getAuthCallbackUrl() {
+  const configuredSiteUrl = (import.meta.env.VITE_SITE_URL as string | undefined)?.trim();
+  const baseUrl = configuredSiteUrl ? configuredSiteUrl.replace(/\/+$/, "") : window.location.origin;
+  return `${baseUrl}/auth/callback`;
+}
+
 export async function signUpWithEmail(email: string, password: string) {
   return supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
+      emailRedirectTo: getAuthCallbackUrl(),
     },
   });
 }
@@ -18,7 +24,7 @@ export async function signInWithGoogle() {
   return supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: getAuthCallbackUrl(),
     },
   });
 }
@@ -29,7 +35,7 @@ export async function signOut() {
 
 export async function requestPasswordReset(email: string) {
   return supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/callback`,
+    redirectTo: getAuthCallbackUrl(),
   });
 }
 

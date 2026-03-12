@@ -10,12 +10,41 @@ export type ProfileRow = {
 };
 
 export async function getMyProfile() {
+  const query = "id, email, display_name, preferences, onboarding_completed";
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, display_name, preferences, onboarding_completed")
-    .single();
+    .select(query)
+    .maybeSingle();
 
   if (error) throw error;
+
+  if (!data) {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+
+    const user = userData.user;
+    if (!user) {
+      throw new Error("Aucun utilisateur connecté pour initialiser le profil.");
+    }
+
+    const { data: createdProfile, error: createError } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          id: user.id,
+          email: user.email ?? null,
+          onboarding_completed: false,
+          preferences: {},
+        },
+        { onConflict: "id" }
+      )
+      .select(query)
+      .single();
+
+    if (createError) throw createError;
+    return createdProfile as ProfileRow;
+  }
+
   return data as ProfileRow;
 }
 

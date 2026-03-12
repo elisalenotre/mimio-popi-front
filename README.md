@@ -85,6 +85,20 @@ Set these in Vercel Project Settings > Environment Variables:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `VITE_SITE_URL` (example: `https://mimio-popi.vercel.app`)
+
+### Supabase Auth redirect configuration (important)
+
+In Supabase Dashboard > Authentication > URL Configuration:
+
+- **Site URL**: `https://mimio-popi.vercel.app`
+- **Redirect URLs** (add all needed):
+  - `https://mimio-popi.vercel.app/auth/callback`
+  - `http://localhost:5173/auth/callback`
+
+If you use Vercel preview deployments, also add:
+
+- `https://*-mimio-popi.vercel.app/auth/callback`
 
 ### Local setup
 

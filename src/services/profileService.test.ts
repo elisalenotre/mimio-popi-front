@@ -1,16 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { selectMock, singleMock, updateMock, eqMock, fromMock } = vi.hoisted(() => ({
+const { selectMock, singleMock, maybeSingleMock, updateMock, eqMock, upsertMock, fromMock, getUserMock } = vi.hoisted(() => ({
   selectMock: vi.fn(),
   singleMock: vi.fn(),
+  maybeSingleMock: vi.fn(),
   updateMock: vi.fn(),
   eqMock: vi.fn(),
+  upsertMock: vi.fn(),
   fromMock: vi.fn(),
+  getUserMock: vi.fn(),
 }));
 
 vi.mock("../lib/supabaseClient", () => ({
   supabase: {
     from: fromMock,
+    auth: {
+      getUser: getUserMock,
+    },
   },
 }));
 
@@ -26,12 +32,14 @@ describe("profileService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    selectMock.mockReturnValue({ single: singleMock });
+    selectMock.mockReturnValue({ single: singleMock, maybeSingle: maybeSingleMock });
     updateMock.mockReturnValue({ eq: eqMock });
+    upsertMock.mockReturnValue({ select: selectMock });
 
     fromMock.mockReturnValue({
       select: selectMock,
       update: updateMock,
+      upsert: upsertMock,
     });
   });
 
@@ -43,7 +51,7 @@ describe("profileService", () => {
       preferences: {},
       onboarding_completed: false,
     };
-    singleMock.mockResolvedValueOnce({ data: profile, error: null });
+    maybeSingleMock.mockResolvedValueOnce({ data: profile, error: null });
 
     const result = await getMyProfile();
 
@@ -52,8 +60,43 @@ describe("profileService", () => {
     expect(result).toEqual(profile);
   });
 
+  it("getMyProfile creates a profile when none exists", async () => {
+    maybeSingleMock.mockResolvedValueOnce({ data: null, error: null });
+    getUserMock.mockResolvedValueOnce({
+      data: {
+        user: {
+          id: "new-user-id",
+          email: "new@example.com",
+        },
+      },
+      error: null,
+    });
+
+    const createdProfile = {
+      id: "new-user-id",
+      email: "new@example.com",
+      display_name: null,
+      preferences: {},
+      onboarding_completed: false,
+    };
+    singleMock.mockResolvedValueOnce({ data: createdProfile, error: null });
+
+    const result = await getMyProfile();
+
+    expect(upsertMock).toHaveBeenCalledWith(
+      {
+        id: "new-user-id",
+        email: "new@example.com",
+        onboarding_completed: false,
+        preferences: {},
+      },
+      { onConflict: "id" }
+    );
+    expect(result).toEqual(createdProfile);
+  });
+
   it("updateProfile updates current user profile by id", async () => {
-    singleMock.mockResolvedValueOnce({
+    maybeSingleMock.mockResolvedValueOnce({
       data: {
         id: "user-42",
         email: "x@example.com",
@@ -77,13 +120,13 @@ describe("profileService", () => {
       display_name: null,
       preferences: { theme: "sun" },
     };
-    singleMock.mockResolvedValueOnce({
+    maybeSingleMock.mockResolvedValueOnce({
       data: {
         ...profile,
       },
       error: null,
     });
-    singleMock.mockResolvedValueOnce({ data: profile, error: null });
+    maybeSingleMock.mockResolvedValueOnce({ data: profile, error: null });
     eqMock.mockResolvedValueOnce({ error: null });
 
     await saveOnboarding({ pace: "normal", priority: "balance", energy: "medium" });
@@ -108,13 +151,13 @@ describe("profileService", () => {
       display_name: null,
       preferences: { locale: "fr" },
     };
-    singleMock.mockResolvedValueOnce({
+    maybeSingleMock.mockResolvedValueOnce({
       data: {
         ...profile,
       },
       error: null,
     });
-    singleMock.mockResolvedValueOnce({ data: profile, error: null });
+    maybeSingleMock.mockResolvedValueOnce({ data: profile, error: null });
     eqMock.mockResolvedValueOnce({ error: null });
 
     await skipOnboarding();
@@ -135,13 +178,13 @@ describe("profileService", () => {
       display_name: null,
       preferences: { pace: "fast" },
     };
-    singleMock.mockResolvedValueOnce({
+    maybeSingleMock.mockResolvedValueOnce({
       data: {
         ...profile,
       },
       error: null,
     });
-    singleMock.mockResolvedValueOnce({ data: profile, error: null });
+    maybeSingleMock.mockResolvedValueOnce({ data: profile, error: null });
     eqMock.mockResolvedValueOnce({ error: null });
 
     await resetOnboardingFlag();
