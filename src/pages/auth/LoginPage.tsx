@@ -7,6 +7,9 @@ import popiMascot from "../../assets/popi.svg";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
+  const shouldShowCheckEmailMessage = searchParams.get("checkEmail") === "1";
+  const emailToConfirm = searchParams.get("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -75,6 +78,11 @@ export default function LoginPage() {
 
       <main>
         <h2>Se connecter</h2>
+        {shouldShowCheckEmailMessage && (
+          <p role="status">
+            Check tes mails{emailToConfirm ? ` (${emailToConfirm})` : ""} pour confirmer ton compte avant de te connecter.
+          </p>
+        )}
         {error && <p role="alert">{error}</p>}
 
         <form onSubmit={handleSubmit}>

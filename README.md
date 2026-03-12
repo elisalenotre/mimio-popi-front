@@ -71,3 +71,35 @@ export default defineConfig([
   },
 ])
 ```
+
+## Deploy on Vercel
+
+This project is configured for Vercel with:
+
+- `vercel.json` for build/output settings and SPA fallback routing.
+- `.env.example` to document required environment variables.
+
+### Required environment variables
+
+Set these in Vercel Project Settings > Environment Variables:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+### Local setup
+
+```bash
+cp .env.example .env.local
+```
+
+Then fill `.env.local` with your Supabase values.
+
+### Build command
+
+```bash
+npm run build
+```
+
+### Notes
+
+- The app uses `BrowserRouter`, so the SPA fallback in `vercel.json` is required to avoid 404 on page refresh for routes like `/login`, `/settings`, etc.

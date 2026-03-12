@@ -51,8 +51,7 @@ export default function SignUpPage() {
         return;
       }
 
-      // Redirection: onboarding (US0.5) ou home
-      navigate("/onboarding", { replace: true });
+      navigate(`/login?checkEmail=1&email=${encodeURIComponent(cleanedEmail)}`, { replace: true });
     } catch {
       setError("Impossible de créer ton compte pour le moment. Réessaie dans un instant.");
     } finally {
@@ -99,6 +98,7 @@ export default function SignUpPage() {
 
       <main>
         <h2>Créer un compte</h2>
+        <p role="note">Après inscription, check tes mails pour confirmer ton compte.</p>
 
         {error && <p role="alert">{error}</p>}
 
