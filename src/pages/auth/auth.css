@@ -58,6 +58,7 @@
   width: clamp(74px, 11.5vw, 124px);
   --sticker-x: -28%;
   --sticker-rot: -12deg;
+  --sticker-scale-x: -1;
 }
 
 .retro-mascot--right {
