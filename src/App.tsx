@@ -1,18 +1,22 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-
-import SignUpPage from "./pages/auth/SignUpPage";
-import LoginPage from "./pages/auth/LoginPage";
-import AuthCallbackPage from "./pages/auth/AuthCallbackPage";
-import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
-import OnboardingPage from "./pages/params/OnBoardingPage";
-import SettingsPage from "./pages/params/SettingsPage";
-import TasksPage from "./pages/tasks/TasksPage";
-import RoomPage from "./pages/room/RoomPage";
+import { Suspense, lazy, type JSX } from "react";
 
 import { RequireOnboarding } from "./components/RequireOnBoarding";
 import { useAuth } from "./contexts/AuthContext";
-import type { JSX } from "react";
+
+const SignUpPage = lazy(() => import("./pages/auth/SignUpPage"));
+const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
+const AuthCallbackPage = lazy(() => import("./pages/auth/AuthCallbackPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/auth/ResetPasswordPage"));
+const OnboardingPage = lazy(() => import("./pages/params/OnBoardingPage"));
+const SettingsPage = lazy(() => import("./pages/params/SettingsPage"));
+const TasksPage = lazy(() => import("./pages/tasks/TasksPage"));
+const RoomPage = lazy(() => import("./pages/room/RoomPage"));
+
+function PageLoader() {
+  return <div>Chargement...</div>;
+}
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
@@ -31,11 +35,46 @@ export default function App() {
   return (
     <Routes>
       {/* Public */}
-      <Route path="/signup" element={<SignUpPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/auth/callback" element={<AuthCallbackPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route
+        path="/signup"
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <SignUpPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <LoginPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/auth/callback"
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <AuthCallbackPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <ForgotPasswordPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <ResetPasswordPage />
+          </Suspense>
+        }
+      />
       <Route path="/privacy" element={<PrivacyPage />} />
 
       {/* Auth required */}
@@ -43,7 +82,9 @@ export default function App() {
         path="/onboarding"
         element={
           <ProtectedRoute>
-            <OnboardingPage />
+            <Suspense fallback={<PageLoader />}>
+              <OnboardingPage />
+            </Suspense>
           </ProtectedRoute>
         }
       />
@@ -53,7 +94,9 @@ export default function App() {
         path="/"
         element={
           <RequireOnboarding>
-            <TasksPage />
+            <Suspense fallback={<PageLoader />}>
+              <TasksPage />
+            </Suspense>
           </RequireOnboarding>
         }
       />
@@ -63,7 +106,9 @@ export default function App() {
         path="/settings"
         element={
           <RequireOnboarding>
-            <SettingsPage />
+            <Suspense fallback={<PageLoader />}>
+              <SettingsPage />
+            </Suspense>
           </RequireOnboarding>
         }
       />
@@ -72,7 +117,9 @@ export default function App() {
         path="/room"
         element={
           <RequireOnboarding>
-            <RoomPage />
+            <Suspense fallback={<PageLoader />}>
+              <RoomPage />
+            </Suspense>
           </RequireOnboarding>
         }
       />
