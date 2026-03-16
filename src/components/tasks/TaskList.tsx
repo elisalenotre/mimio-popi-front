@@ -7,7 +7,16 @@ type TaskListProps = {
 function formatDueDate(dateIso: string | null) {
   if (!dateIso) return "Sans date";
 
-  const date = new Date(`${dateIso}T00:00:00`);
+  const raw = dateIso.trim();
+  if (!raw) return "Sans date";
+
+  const parsedValue = raw.includes("T") ? raw : `${raw}T00:00:00`;
+  const date = new Date(parsedValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Sans date";
+  }
+
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
   }).format(date);

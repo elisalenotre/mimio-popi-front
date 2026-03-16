@@ -35,6 +35,15 @@
   animation: tasks-plus-breathe 2s ease-in-out infinite;
 }
 
+.task-add-mascot-button__icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
+  filter: brightness(0) saturate(100%) opacity(0.85);
+}
+
 .task-help-bubble {
   position: absolute;
   right: 6%;

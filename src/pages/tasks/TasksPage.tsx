@@ -5,6 +5,7 @@ import { AppNavbar } from "../../components/navbar/AppNavbar";
 import { createTask, getMyTaskCategories, getMyTasks } from "../../services/task/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
 import happyMascot from "../../assets/popi-mimio-very-happy.svg";
+import plusIcon from "../../assets/icons/Plus.svg";
 import "./TasksPage.css";
 
 export default function TasksPage() {
@@ -84,7 +85,7 @@ export default function TasksPage() {
             setIsAddPanelOpen(true);
           }}
         >
-          +
+          <img className="task-add-mascot-button__icon" src={plusIcon} alt="" aria-hidden="true" />
         </button>
       </div>
 
