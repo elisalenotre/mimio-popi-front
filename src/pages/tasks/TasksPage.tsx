@@ -18,6 +18,8 @@ export default function TasksPage() {
   const [categoriesAvailable, setCategoriesAvailable] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [now, setNow] = useState(() => new Date());
+  const [isClockVisible, setIsClockVisible] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -49,6 +51,25 @@ export default function TasksPage() {
 
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const dayLabel = new Intl.DateTimeFormat("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(now);
+
+  const timeLabel = new Intl.DateTimeFormat("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(now);
 
   const handleCreateTask = async (payload: CreateTaskInput) => {
     setError(null);
@@ -98,6 +119,27 @@ export default function TasksPage() {
         <h2>Liste</h2>
         <TaskList tasks={tasks} />
       </section>
+
+      {isClockVisible ? (
+        <button
+          type="button"
+          className="task-clock"
+          aria-label="Masquer le jour et l'heure"
+          onClick={() => setIsClockVisible(false)}
+        >
+          <span className="task-clock__day">{dayLabel}</span>
+          <span className="task-clock__time">{timeLabel}</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="task-clock-toggle"
+          aria-label="Afficher le jour et l'heure"
+          onClick={() => setIsClockVisible(true)}
+        >
+          Heure
+        </button>
+      )}
 
       {isAddPanelOpen && (
         <div className="task-modal-overlay" role="presentation" onClick={() => setIsAddPanelOpen(false)}>
