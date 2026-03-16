@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { getTaskTitleError, normalizeTaskTitle, TASK_TITLE_MAX_LENGTH } from "../../services/taskValidation";
+import { getTaskTitleError, normalizeTaskTitle, TASK_TITLE_MAX_LENGTH } from "../../services/taskValidation/taskValidation";
 import type { CreateTaskInput, TaskCategory } from "../../types/tasks";
 
 type TaskFormProps = {
@@ -46,14 +46,14 @@ export function TaskForm({ categories, categoriesAvailable, onSubmit }: TaskForm
       setDueDate("");
       setTitleTouched(false);
     } catch {
-      setError("Impossible d'ajouter la tache pour le moment. Reessaie.");
+      setError("Impossible d'ajouter la tâche pour le moment. Reessaie.");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} aria-label="Ajouter une tache">
+    <form onSubmit={handleSubmit} aria-label="Ajouter une tâche">
       <label htmlFor="task-title">
         Titre
         <input
@@ -61,7 +61,7 @@ export function TaskForm({ categories, categoriesAvailable, onSubmit }: TaskForm
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           maxLength={TASK_TITLE_MAX_LENGTH}
-          placeholder="Ex: Payer facture"
+          placeholder="Ex: Avancer sur le projet ou 18h30 rendez-vous chez le médecin"
         />
       </label>
 
@@ -85,7 +85,7 @@ export function TaskForm({ categories, categoriesAvailable, onSubmit }: TaskForm
       </label>
 
       {!categoriesAvailable && (
-        <p role="status">Categories indisponibles pour le moment. Tu peux quand meme ajouter une tache simple.</p>
+        <p role="status">Categories indisponibles pour le moment. Tu peux quand meme ajouter une tâche simple.</p>
       )}
 
       <label htmlFor="task-due-date">

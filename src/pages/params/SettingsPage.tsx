@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { getMyProfile, resetOnboardingFlag, updateProfile } from "../../services/profileService";
-import { isValidDisplayName, normalizeDisplayName } from "../../services/profileValidation";
+import { useNavigate } from "react-router-dom";
+import { getMyProfile, resetOnboardingFlag, updateProfile } from "../../services/profile/profileService";
+import { isValidDisplayName, normalizeDisplayName } from "../../services/profileValidation/profileValidation";
 import type { Preferences, MascotMessageIntensity } from "../../types/preferences";
-import { signOut } from "../../services/authService";
+import { signOut } from "../../services/auth/authService";
+import { AppNavbar } from "../../components/navbar/AppNavbar";
 import "./SettingsPage.css";
 
 export default function SettingsPage() {
@@ -115,11 +116,8 @@ export default function SettingsPage() {
 
   return (
     <main>
+      <AppNavbar />
       <h1>Profil / Paramètres</h1>
-
-      <Link to="/" className="settings-back-link">
-        Retour à l’accueil
-      </Link>
 
       {error && <p role="alert">{error}</p>}
       {success && <p role="status">{success}</p>}

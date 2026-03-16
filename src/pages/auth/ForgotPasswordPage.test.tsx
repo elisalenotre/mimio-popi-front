@@ -7,7 +7,7 @@ const { requestPasswordResetMock } = vi.hoisted(() => ({
   requestPasswordResetMock: vi.fn(),
 }));
 
-vi.mock("../../services/authService", () => ({
+vi.mock("../../services/auth/authService", () => ({
   requestPasswordReset: requestPasswordResetMock,
 }));
 

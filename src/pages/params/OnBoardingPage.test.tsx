@@ -17,7 +17,7 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("../../services/profileService", () => ({
+vi.mock("../../services/profile/profileService", () => ({
   saveOnboarding: saveOnboardingMock,
   skipOnboarding: skipOnboardingMock,
 }));

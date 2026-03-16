@@ -15,11 +15,11 @@ function formatDueDate(dateIso: string | null) {
 
 export function TaskList({ tasks }: TaskListProps) {
   if (tasks.length === 0) {
-    return <p>Aucune tache pour le moment.</p>;
+    return <p>Aucune tâche pour le moment.</p>;
   }
 
   return (
-    <ul aria-label="Liste des taches">
+    <ul aria-label="Liste des tâches">
       {tasks.map((task) => (
         <li key={task.id}>
           <strong>{task.title}</strong>

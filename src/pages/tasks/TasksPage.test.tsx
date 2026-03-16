@@ -9,7 +9,7 @@ const { getMyTasksMock, getMyTaskCategoriesMock, createTaskMock } = vi.hoisted((
   createTaskMock: vi.fn(),
 }));
 
-vi.mock("../../services/taskService", () => ({
+vi.mock("../../services/task/taskService", () => ({
   getMyTasks: getMyTasksMock,
   getMyTaskCategories: getMyTaskCategoriesMock,
   createTask: createTaskMock,
@@ -47,9 +47,9 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole("heading", { name: "Mes taches" });
+    await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getByRole("button", { name: "Ajouter une tache" }));
+    await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
     await user.type(screen.getByLabelText("Titre"), "  Payer facture  ");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
@@ -62,7 +62,7 @@ describe("TasksPage", () => {
     });
 
     expect(screen.getByText("Payer facture")).toBeInTheDocument();
-    expect(screen.getByRole("status", { name: "" })).toHaveTextContent("Tache ajoutee.");
+    expect(screen.getByRole("status", { name: "" })).toHaveTextContent("tâche ajoutee.");
   });
 
   it("creates a task with category and date", async () => {
@@ -84,9 +84,9 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole("heading", { name: "Mes taches" });
+    await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getByRole("button", { name: "Ajouter une tache" }));
+    await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
     await user.type(screen.getByLabelText("Titre"), "Reviser");
     await user.selectOptions(screen.getByLabelText("Categorie (optionnel)"), "c-2");
     await user.type(screen.getByLabelText("Date (optionnel)"), "2026-03-17");
@@ -110,14 +110,14 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole("heading", { name: "Mes taches" });
+    await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getByRole("button", { name: "Ajouter une tache" }));
+    await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
     await user.type(screen.getByLabelText("Titre"), "   ");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
     expect(createTaskMock).not.toHaveBeenCalled();
-    expect(screen.getAllByRole("alert")[0]).toHaveTextContent("Ajoute un titre pour creer ta tache.");
+    expect(screen.getAllByRole("alert")[0]).toHaveTextContent("Ajoute un titre pour creer ta tâche.");
   });
 
   it("keeps form content and shows save error on api failure", async () => {
@@ -131,15 +131,15 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole("heading", { name: "Mes taches" });
+    await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getByRole("button", { name: "Ajouter une tache" }));
+    await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
     const titleInput = screen.getByLabelText("Titre");
     await user.type(titleInput, "Acheter pain");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Impossible d'ajouter la tache pour le moment. Reessaie.")).toBeInTheDocument();
+      expect(screen.getByText("Impossible d'ajouter la tâche pour le moment. Reessaie.")).toBeInTheDocument();
     });
 
     expect(titleInput).toHaveValue("Acheter pain");
@@ -165,10 +165,10 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole("heading", { name: "Mes taches" });
+    await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getByRole("button", { name: "Ajouter une tache" }));
-    expect(screen.getByText("Categories indisponibles pour le moment. Tu peux quand meme ajouter une tache simple.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
+    expect(screen.getByText("Categories indisponibles pour le moment. Tu peux quand meme ajouter une tâche simple.")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Titre"), "Course rapide");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));

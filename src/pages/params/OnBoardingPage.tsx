@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Energy, OnboardingAnswers, Pace, Priority } from "../../types/onboarding";
-import { saveOnboarding, skipOnboarding } from "../../services/profileService";
+import { saveOnboarding, skipOnboarding } from "../../services/profile/profileService";
 
 type Step = 0 | 1 | 2;
 

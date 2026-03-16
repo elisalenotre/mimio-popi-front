@@ -1,7 +1,7 @@
 import { useEffect, useState, type JSX } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getMyProfile } from "../services/profileService";
+import { getMyProfile } from "../services/profile/profileService";
 
 export function RequireOnboarding({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();

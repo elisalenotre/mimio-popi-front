@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { TaskForm } from "../../components/tasks/TaskForm";
 import { TaskList } from "../../components/tasks/TaskList";
-import { createTask, getMyTaskCategories, getMyTasks } from "../../services/taskService";
+import { AppNavbar } from "../../components/navbar/AppNavbar";
+import { createTask, getMyTaskCategories, getMyTasks } from "../../services/task/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
 import happyMascot from "../../assets/popi-mimio-very-happy.svg";
 import "./TasksPage.css";
@@ -26,7 +26,7 @@ export default function TasksPage() {
         if (tasksResult.status === "fulfilled") {
           setTasks(tasksResult.value);
         } else {
-          setError("Impossible de charger les taches pour le moment.");
+          setError("Impossible de charger les tâches pour le moment.");
         }
 
         if (categoriesResult.status === "fulfilled") {
@@ -55,7 +55,7 @@ export default function TasksPage() {
 
     const created = await createTask(payload);
     setTasks((current) => [created, ...current]);
-    setSuccess("Tache ajoutee.");
+    setSuccess("tâche ajoutee.");
     setIsAddPanelOpen(false);
   };
 
@@ -63,13 +63,14 @@ export default function TasksPage() {
 
   return (
     <main>
-      <h1>Mes taches</h1>
+      <AppNavbar />
+      <h1>Mes tâches</h1>
       <p>Capture vite ce que tu dois faire pour alleger ta charge mentale.</p>
 
       <div className="tasks-mascot-wrap">
         {showMascotHint && (
           <p className="task-help-bubble" role="status" aria-live="polite">
-            Hello!! Ajoute une nouvelle tache ici!!
+            Hello!! Ajoute une nouvelle tâche ici!!
           </p>
         )}
 
@@ -77,7 +78,7 @@ export default function TasksPage() {
         <button
           type="button"
           className="task-add-mascot-button"
-          aria-label="Ajouter une tache"
+          aria-label="Ajouter une tâche"
           onClick={() => {
             setShowMascotHint(false);
             setIsAddPanelOpen(true);
@@ -86,10 +87,6 @@ export default function TasksPage() {
           +
         </button>
       </div>
-
-      <p>
-        <Link to="/settings">Aller aux parametres</Link>
-      </p>
 
       {error && <p role="alert">{error}</p>}
       {success && <p role="status">{success}</p>}
@@ -107,11 +104,11 @@ export default function TasksPage() {
             className="task-modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Ajouter une tache"
+            aria-label="Ajouter une tâche"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="task-modal-header">
-              <h2>Ajouter une tache</h2>
+              <h2>Ajouter une tâche</h2>
               <button type="button" onClick={() => setIsAddPanelOpen(false)}>
                 Fermer
               </button>

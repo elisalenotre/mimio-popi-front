@@ -19,13 +19,13 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("../../services/profileService", () => ({
+vi.mock("../../services/profile/profileService", () => ({
   getMyProfile: getMyProfileMock,
   updateProfile: updateProfileMock,
   resetOnboardingFlag: resetOnboardingFlagMock,
 }));
 
-vi.mock("../../services/authService", () => ({
+vi.mock("../../services/auth/authService", () => ({
   signOut: signOutMock,
 }));
 
@@ -61,7 +61,7 @@ describe("SettingsPage", () => {
     expect(screen.getByRole("checkbox")).toBeDisabled();
   });
 
-  it("shows back-home link", async () => {
+  it("shows profile heading", async () => {
     getMyProfileMock.mockResolvedValueOnce({
       id: "u-0",
       email: "u0@example.com",
@@ -76,7 +76,7 @@ describe("SettingsPage", () => {
     );
 
     await screen.findByRole("heading", { name: "Profil / Paramètres" });
-    expect(screen.getByRole("link", { name: "Retour à l’accueil" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("heading", { name: "Profil / Paramètres" })).toBeInTheDocument();
   });
 
   it("saves normalized display name and preferences", async () => {
@@ -153,7 +153,7 @@ describe("SettingsPage", () => {
     expect(resetOnboardingFlagMock).toHaveBeenCalledTimes(1);
     expect(navigateMock).toHaveBeenCalledWith("/onboarding", { replace: true });
 
-    await user.click(screen.getByRole("button", { name: "Se déconnecter" }));
+    await user.click(screen.getByText("Se déconnecter", { selector: "button.settings-logout-button" }));
     expect(signOutMock).toHaveBeenCalledTimes(1);
     expect(navigateMock).toHaveBeenCalledWith("/login", { replace: true });
   });

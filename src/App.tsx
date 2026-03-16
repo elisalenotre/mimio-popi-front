@@ -8,6 +8,7 @@ import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import OnboardingPage from "./pages/params/OnBoardingPage";
 import SettingsPage from "./pages/params/SettingsPage";
 import TasksPage from "./pages/tasks/TasksPage";
+import RoomPage from "./pages/room/RoomPage";
 
 import { RequireOnboarding } from "./components/RequireOnBoarding";
 import { useAuth } from "./contexts/AuthContext";
@@ -63,6 +64,15 @@ export default function App() {
         element={
           <RequireOnboarding>
             <SettingsPage />
+          </RequireOnboarding>
+        }
+      />
+
+      <Route
+        path="/room"
+        element={
+          <RequireOnboarding>
+            <RoomPage />
           </RequireOnboarding>
         }
       />

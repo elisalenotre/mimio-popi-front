@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { requestPasswordReset } from "../../services/authService";
-import { isValidEmail, normalizeEmail } from "../../services/validation";
+import { requestPasswordReset } from "../../services/auth/authService";
+import { isValidEmail, normalizeEmail } from "../../services/validation/validation";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
