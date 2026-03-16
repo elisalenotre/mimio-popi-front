@@ -19,13 +19,13 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("../../services/profileService", () => ({
+vi.mock("../../services/profile/profileService", () => ({
   getMyProfile: getMyProfileMock,
   updateProfile: updateProfileMock,
   resetOnboardingFlag: resetOnboardingFlagMock,
 }));
 
-vi.mock("../../services/authService", () => ({
+vi.mock("../../services/auth/authService", () => ({
   signOut: signOutMock,
 }));
 
@@ -57,6 +57,26 @@ describe("SettingsPage", () => {
     expect(screen.getByLabelText("Pseudo")).toHaveValue("Elisa");
     expect(screen.getByRole("combobox")).toHaveValue("discrete");
     expect(screen.getByRole("checkbox")).not.toBeChecked();
+    expect(screen.getByRole("combobox")).toBeDisabled();
+    expect(screen.getByRole("checkbox")).toBeDisabled();
+  });
+
+  it("shows profile heading", async () => {
+    getMyProfileMock.mockResolvedValueOnce({
+      id: "u-0",
+      email: "u0@example.com",
+      display_name: "Elisa",
+      preferences: {},
+    });
+
+    render(
+      <MemoryRouter>
+        <SettingsPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByRole("heading", { name: "Profil / Paramètres" });
+    expect(screen.getByRole("heading", { name: "Profil / Paramètres" })).toBeInTheDocument();
   });
 
   it("saves normalized display name and preferences", async () => {
@@ -94,8 +114,6 @@ describe("SettingsPage", () => {
 
     const input = screen.getByLabelText("Pseudo");
     await user.type(input, "  New Name  ");
-    await user.selectOptions(screen.getByRole("combobox"), "normal");
-    await user.click(screen.getByRole("checkbox"));
     await user.click(screen.getByRole("button", { name: "Enregistrer" }));
 
     await waitFor(() => {
@@ -105,7 +123,7 @@ describe("SettingsPage", () => {
           onboarding_completed: true,
           custom_flag: "keep",
           mascot_message_intensity: "normal",
-          help_texts_enabled: false,
+          help_texts_enabled: true,
         },
       });
     });
@@ -135,7 +153,7 @@ describe("SettingsPage", () => {
     expect(resetOnboardingFlagMock).toHaveBeenCalledTimes(1);
     expect(navigateMock).toHaveBeenCalledWith("/onboarding", { replace: true });
 
-    await user.click(screen.getByRole("button", { name: "Se déconnecter" }));
+    await user.click(screen.getByText("Se déconnecter", { selector: "button.settings-logout-button" }));
     expect(signOutMock).toHaveBeenCalledTimes(1);
     expect(navigateMock).toHaveBeenCalledWith("/login", { replace: true });
   });

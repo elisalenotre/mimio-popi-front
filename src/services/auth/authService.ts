@@ -1,4 +1,4 @@
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../../lib/supabaseClient";
 
 function getAuthCallbackUrl() {
   const configuredSiteUrl = (import.meta.env.VITE_SITE_URL as string | undefined)?.trim();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidDisplayName, normalizeDisplayName } from "./profileValidation";
+import { isValidDisplayName, normalizeDisplayName } from "../profileValidation/profileValidation";
 
 describe("normalizeDisplayName", () => {
   it("trim leading and trailing spaces", () => {

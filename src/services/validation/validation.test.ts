@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isStrongPassword, isValidEmail, normalizeEmail } from "./validation";
+import { isStrongPassword, isValidEmail, normalizeEmail } from "../validation/validation";
 
 describe("normalizeEmail", () => {
   it("trim leading and trailing spaces", () => {

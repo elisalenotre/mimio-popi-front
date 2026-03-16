@@ -4,6 +4,6 @@ export type Energy = "low" | "medium" | "high";
 
 export type OnboardingAnswers = {
   pace: Pace;
-  priority: Priority;
+  priorities: Priority[];
   energy: Energy;
 };

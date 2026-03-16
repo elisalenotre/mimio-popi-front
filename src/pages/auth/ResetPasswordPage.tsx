@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { updatePassword } from "../../services/authService";
-import { isStrongPassword } from "../../services/validation";
+import { updatePassword } from "../../services/auth/authService";
+import { isStrongPassword } from "../../services/validation/validation";
 
 function readUrlParam(name: string) {
   const searchParams = new URLSearchParams(window.location.search);

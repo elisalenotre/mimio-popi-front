@@ -11,7 +11,7 @@ const { selectMock, singleMock, maybeSingleMock, updateMock, eqMock, upsertMock,
   getUserMock: vi.fn(),
 }));
 
-vi.mock("../lib/supabaseClient", () => ({
+vi.mock("../../lib/supabaseClient", () => ({
   supabase: {
     from: fromMock,
     auth: {
@@ -26,7 +26,7 @@ import {
   saveOnboarding,
   skipOnboarding,
   updateProfile,
-} from "./profileService";
+} from "../profile/profileService";
 
 describe("profileService", () => {
   beforeEach(() => {
@@ -129,12 +129,13 @@ describe("profileService", () => {
     maybeSingleMock.mockResolvedValueOnce({ data: profile, error: null });
     eqMock.mockResolvedValueOnce({ error: null });
 
-    await saveOnboarding({ pace: "normal", priority: "balance", energy: "medium" });
+    await saveOnboarding({ pace: "normal", priorities: ["balance", "work"], energy: "medium" });
 
     expect(updateMock).toHaveBeenCalledWith({
       preferences: {
         theme: "sun",
         pace: "normal",
+        priorities: ["balance", "work"],
         priority: "balance",
         energy: "medium",
         onboarding_completed: true,

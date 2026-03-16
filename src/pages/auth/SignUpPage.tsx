@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { signInWithGoogle, signUpWithEmail } from "../../services/authService";
-import { isStrongPassword, isValidEmail, normalizeEmail } from "../../services/validation";
+import { signInWithGoogle, signUpWithEmail } from "../../services/auth/authService";
+import { isStrongPassword, isValidEmail, normalizeEmail } from "../../services/validation/validation";
 import mimioMascot from "../../assets/mimio-ok.svg";
 import popiMascot from "../../assets/popi.svg";
+import "./auth.css";
 
 function mapSupabaseSignupError(message: string) {
   const msg = message.toLowerCase();

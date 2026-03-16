@@ -1,9 +1,17 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Energy, OnboardingAnswers, Pace, Priority } from "../../types/onboarding";
-import { saveOnboarding, skipOnboarding } from "../../services/profileService";
+import { saveOnboarding, skipOnboarding } from "../../services/profile/profileService";
 
 type Step = 0 | 1 | 2;
+
+const priorityOptions: Array<{ value: Priority; label: string }> = [
+  { value: "studies", label: "Études" },
+  { value: "work", label: "Travail" },
+  { value: "balance", label: "Équilibre" },
+  { value: "health", label: "Santé" },
+  { value: "other", label: "Autre" },
+];
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
@@ -11,7 +19,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<Step>(0);
 
   const [pace, setPace] = useState<Pace | "">("");
-  const [priority, setPriority] = useState<Priority | "">("");
+  const [priorities, setPriorities] = useState<Priority[]>([]);
   const [energy, setEnergy] = useState<Energy | "">("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -19,10 +27,27 @@ export default function OnboardingPage() {
 
   const canGoNext = useMemo(() => {
     if (step === 0) return pace !== "";
-    if (step === 1) return priority !== "";
+    if (step === 1) return priorities.length > 0;
     if (step === 2) return energy !== "";
     return false;
-  }, [step, pace, priority, energy]);
+  }, [step, pace, priorities, energy]);
+
+  const togglePriority = (value: Priority) => {
+    setError(null);
+
+    setPriorities((current) => {
+      if (current.includes(value)) {
+        return current.filter((item) => item !== value);
+      }
+
+      if (current.length >= 2) {
+        setError("Choisis jusqu'à 2 priorités maximum.");
+        return current;
+      }
+
+      return [...current, value];
+    });
+  };
 
   const next = () => {
     if (!canGoNext) return;
@@ -50,9 +75,9 @@ export default function OnboardingPage() {
 
   const handleFinish = async () => {
     setError(null);
-    if (!pace || !priority || !energy) return;
+    if (!pace || priorities.length === 0 || !energy) return;
 
-    const answers: OnboardingAnswers = { pace, priority, energy };
+    const answers: OnboardingAnswers = { pace, priorities, energy };
 
     try {
       setSubmitting(true);
@@ -120,15 +145,25 @@ export default function OnboardingPage() {
 
       {step === 1 && (
         <section>
-          <h2>Ta priorité du moment</h2>
-          <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
-            <option value="">— Choisir —</option>
-            <option value="studies">Études</option>
-            <option value="work">Travail</option>
-            <option value="balance">Équilibre</option>
-            <option value="health">Santé</option>
-            <option value="other">Autre</option>
-          </select>
+          <h2>Tes priorités du moment (max 2)</h2>
+          <p>Choisis 1 ou 2 priorités.</p>
+
+          <div>
+            {priorityOptions.map((option) => {
+              const isChecked = priorities.includes(option.value);
+              return (
+                <label key={option.value}>
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => togglePriority(option.value)}
+                    disabled={!isChecked && priorities.length >= 2}
+                  />
+                  {option.label}
+                </label>
+              );
+            })}
+          </div>
         </section>
       )}
 

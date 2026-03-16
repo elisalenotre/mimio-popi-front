@@ -1,5 +1,5 @@
-import { supabase } from "../lib/supabaseClient";
-import type { OnboardingAnswers } from "../types/onboarding";
+import { supabase } from "../../lib/supabaseClient";
+import type { OnboardingAnswers } from "../../types/onboarding";
 
 export type ProfileRow = {
   id: string;
@@ -62,7 +62,8 @@ export async function saveOnboarding(answers: OnboardingAnswers) {
   const nextPreferences = {
     ...(profile.preferences ?? {}),
     pace: answers.pace,
-    priority: answers.priority,
+    priorities: answers.priorities,
+    priority: answers.priorities[0] ?? null,
     energy: answers.energy,
     onboarding_completed: true,
   };

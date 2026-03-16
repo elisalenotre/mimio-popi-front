@@ -17,7 +17,7 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("../../services/authService", () => ({
+vi.mock("../../services/auth/authService", () => ({
   signInWithEmail: signInWithEmailMock,
   signInWithGoogle: signInWithGoogleMock,
 }));
