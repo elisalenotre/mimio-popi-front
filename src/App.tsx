@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, Link } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import SignUpPage from "./pages/auth/SignUpPage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -7,6 +7,7 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import OnboardingPage from "./pages/params/OnBoardingPage";
 import SettingsPage from "./pages/params/SettingsPage";
+import TasksPage from "./pages/tasks/TasksPage";
 
 import { RequireOnboarding } from "./components/RequireOnBoarding";
 import { useAuth } from "./contexts/AuthContext";
@@ -19,19 +20,6 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
   if (!user) return <Navigate to="/login" replace />;
 
   return children;
-}
-
-// Placeholders (tu remplaceras par tes vraies pages)
-function HomePage() {
-  return (
-    <main>
-      <h1>Accueil</h1>
-      <p>Tu es connecte. Tu peux gerer ton profil dans les parametres.</p>
-      <p>
-        <Link to="/settings">Aller aux parametres</Link>
-      </p>
-    </main>
-  );
 }
 
 function PrivacyPage() {
@@ -64,7 +52,7 @@ export default function App() {
         path="/"
         element={
           <RequireOnboarding>
-            <HomePage />
+            <TasksPage />
           </RequireOnboarding>
         }
       />
