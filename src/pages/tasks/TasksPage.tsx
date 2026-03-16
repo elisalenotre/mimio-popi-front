@@ -87,7 +87,7 @@ export default function TasksPage() {
     <main>
       <AppNavbar />
       <h1>Mes tâches</h1>
-      <p>Saisis les choses que tu aimerais accomplir aujourd'hui. Essaie de pas trop te surcharger.</p>
+      <p>Saisis les choses que tu aimerais accomplir aujourd'hui en cliquant sur le "+" dans la main de Mimio.</p>
 
       <div className="tasks-mascot-wrap">
         {showMascotHint && (
