@@ -58,7 +58,8 @@ describe("OnboardingPage", () => {
     await user.click(screen.getByRole("radio", { name: "Normal" }));
     await user.click(screen.getByRole("button", { name: "Suivant" }));
 
-    await user.selectOptions(screen.getByRole("combobox"), "balance");
+    await user.click(screen.getByRole("checkbox", { name: "Équilibre" }));
+    await user.click(screen.getByRole("checkbox", { name: "Travail" }));
     await user.click(screen.getByRole("button", { name: "Suivant" }));
 
     await user.click(screen.getByRole("radio", { name: "Moyenne" }));
@@ -66,10 +67,28 @@ describe("OnboardingPage", () => {
 
     expect(saveOnboardingMock).toHaveBeenCalledWith({
       pace: "normal",
-      priority: "balance",
+      priorities: ["balance", "work"],
       energy: "medium",
     });
     expect(navigateMock).toHaveBeenCalledWith("/settings", { replace: true });
+  });
+
+  it("limits priorities to two choices", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <OnboardingPage />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole("radio", { name: "Normal" }));
+    await user.click(screen.getByRole("button", { name: "Suivant" }));
+
+    await user.click(screen.getByRole("checkbox", { name: "Études" }));
+    await user.click(screen.getByRole("checkbox", { name: "Travail" }));
+
+    expect(screen.getByRole("checkbox", { name: "Équilibre" })).toBeDisabled();
   });
 
   it("skips onboarding and redirects home", async () => {

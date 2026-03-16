@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getMyProfile, resetOnboardingFlag, updateProfile } from "../../services/profileService";
 import { isValidDisplayName, normalizeDisplayName } from "../../services/profileValidation";
 import type { Preferences, MascotMessageIntensity } from "../../types/preferences";
 import { signOut } from "../../services/authService";
+import "./SettingsPage.css";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -116,6 +117,10 @@ export default function SettingsPage() {
     <main>
       <h1>Profil / Paramètres</h1>
 
+      <Link to="/" className="settings-back-link">
+        Retour à l’accueil
+      </Link>
+
       {error && <p role="alert">{error}</p>}
       {success && <p role="status">{success}</p>}
 
@@ -131,8 +136,12 @@ export default function SettingsPage() {
           {displayNameError && <p role="alert">{displayNameError}</p>}
         </fieldset>
 
-        <fieldset disabled={submitting}>
+        <fieldset disabled className="settings-preferences-disabled" aria-disabled="true">
           <legend>Préférences</legend>
+
+          <p className="settings-mvp-note" role="note">
+            Cette section sera activée dans une prochaine version.
+          </p>
 
           <label>
             Intensité des messages mascottes
@@ -165,7 +174,12 @@ export default function SettingsPage() {
 
       <hr />
 
-      <button type="button" onClick={handleLogout} disabled={submitting}>
+      <button
+        type="button"
+        className="settings-logout-button"
+        onClick={handleLogout}
+        disabled={submitting}
+      >
         Se déconnecter
       </button>
     </main>

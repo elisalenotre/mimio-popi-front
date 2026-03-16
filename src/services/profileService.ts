@@ -62,7 +62,8 @@ export async function saveOnboarding(answers: OnboardingAnswers) {
   const nextPreferences = {
     ...(profile.preferences ?? {}),
     pace: answers.pace,
-    priority: answers.priority,
+    priorities: answers.priorities,
+    priority: answers.priorities[0] ?? null,
     energy: answers.energy,
     onboarding_completed: true,
   };
