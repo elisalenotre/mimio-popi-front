@@ -4,6 +4,7 @@ import { signInWithEmail, signInWithGoogle } from "../../services/authService";
 import { isValidEmail, normalizeEmail } from "../../services/validation";
 import mimioMascot from "../../assets/mimio-ok.svg";
 import popiMascot from "../../assets/popi.svg";
+import "./auth.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();

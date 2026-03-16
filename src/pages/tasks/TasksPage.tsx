@@ -5,6 +5,7 @@ import { TaskList } from "../../components/tasks/TaskList";
 import { createTask, getMyTaskCategories, getMyTasks } from "../../services/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
 import happyMascot from "../../assets/popi-mimio-very-happy.svg";
+import "./TasksPage.css";
 
 export default function TasksPage() {
   const [loading, setLoading] = useState(true);
