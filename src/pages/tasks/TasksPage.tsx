@@ -87,12 +87,12 @@ export default function TasksPage() {
     <main>
       <AppNavbar />
       <h1>Mes tâches</h1>
-      <p>Capture vite ce que tu dois faire pour alleger ta charge mentale.</p>
+      <p>Saisis les choses que tu aimerais accomplir aujourd'hui. Essaie de pas trop te surcharger.</p>
 
       <div className="tasks-mascot-wrap">
         {showMascotHint && (
           <p className="task-help-bubble" role="status" aria-live="polite">
-            Hello!! Ajoute une nouvelle tâche ici!!
+            Pour ajouter une nouvelle tâche, c'est par ici par ici!
           </p>
         )}
 

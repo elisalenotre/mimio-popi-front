@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getMyProfile, resetOnboardingFlag, updateProfile } from "../../services/profile/profileService";
 import { isValidDisplayName, normalizeDisplayName } from "../../services/profileValidation/profileValidation";
 import type { Preferences, MascotMessageIntensity } from "../../types/preferences";
 import { signOut } from "../../services/auth/authService";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
+import backIcon from "../../assets/icons/Chevron-Arrow-Left.svg";
+import exitIcon from "../../assets/icons/Exit.svg";
 import "./SettingsPage.css";
 
 export default function SettingsPage() {
@@ -118,6 +120,12 @@ export default function SettingsPage() {
     <main>
       <AppNavbar />
       <h1>Profil / Paramètres</h1>
+      <p className="settings-back-link">
+        <Link to="/" className="back-home-link">
+          <img className="back-home-link__icon" src={backIcon} alt="" aria-hidden="true" />
+          Retour aux tâches
+        </Link>
+      </p>
 
       {error && <p role="alert">{error}</p>}
       {success && <p role="status">{success}</p>}
@@ -178,6 +186,7 @@ export default function SettingsPage() {
         onClick={handleLogout}
         disabled={submitting}
       >
+        <img className="settings-logout-icon" src={exitIcon} alt="" aria-hidden="true" />
         Se déconnecter
       </button>
     </main>
