@@ -227,15 +227,24 @@ export async function createTask(input: CreateTaskInput) {
 
   const title = normalizeTaskTitle(input.title);
   const notes = input.notes ? input.notes.trim() : null;
-  const categoryId = input.categoryId ?? null;
+  const requestedCategoryId = input.categoryId ?? null;
   const dueDate = input.dueDate ?? null;
+
+  let category: TaskCategory | null = null;
+  let categoryId: string | null = null;
+
+  if (requestedCategoryId) {
+    const categoriesById = await fetchCategoriesMap(userId);
+    category = categoriesById.get(requestedCategoryId) ?? null;
+    categoryId = category?.id ?? null;
+  }
 
   const { data, error } = await supabase
     .from("tasks")
     .insert({
       user_id: userId,
       title,
-        notes,
+      notes,
       category_id: categoryId,
       due_at: dueDate,
       is_done: false,
@@ -244,16 +253,6 @@ export async function createTask(input: CreateTaskInput) {
     .single();
 
   if (error) throw error;
-
-  let category: TaskCategory | null = null;
-  if (categoryId) {
-    try {
-      const categories = await getMyTaskCategories();
-      category = categories.find((item) => item.id === categoryId) ?? null;
-    } catch {
-      category = null;
-    }
-  }
 
   const row = data as TaskRow;
   return {
@@ -276,7 +275,12 @@ export async function updateTask(taskId: string, input: UpdateTaskInput) {
   }
 
   if (input.categoryId !== undefined) {
-    updates.category_id = input.categoryId;
+    if (input.categoryId) {
+      const categoriesById = await fetchCategoriesMap(userId);
+      updates.category_id = categoriesById.has(input.categoryId) ? input.categoryId : null;
+    } else {
+      updates.category_id = null;
+    }
   }
 
   if (input.dueDate !== undefined) {

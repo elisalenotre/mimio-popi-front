@@ -61,7 +61,7 @@ export function TaskList({
   if (tasks.length === 0) {
     return (
       <div className="task-list-wrap task-list-empty" role="status" aria-live="polite">
-        <p>Tu n'as rien a faire pour l'instant.</p>
+        <p>Popi ne voit aucune tâche pour le moment.</p>
         <button type="button" onClick={onAddTask}>
           Ajouter une tâche
         </button>
@@ -71,7 +71,7 @@ export function TaskList({
 
   return (
     <div className="task-list-wrap" aria-label="Liste des tâches">
-      {todoTasks.length === 0 && <p className="task-list-feedback">Tout est fait, bien joue.</p>}
+      {todoTasks.length === 0 && <p className="task-list-feedback">Bravo, Mimio et Popi célèbrent: tout est fait !</p>}
 
       <div className="task-list-sections">
         <section className="task-list-section" aria-label="Tâches à faire">
@@ -81,7 +81,7 @@ export function TaskList({
           </div>
 
           {todoTasks.length === 0 ? (
-            <p>Aucune tâche a faire.</p>
+            <p>Popi dit: aucune tâche à faire.</p>
           ) : (
             <ul className="task-list">
               {todoTasks.map((task) => (
@@ -116,7 +116,7 @@ export function TaskList({
           )}
 
           {doneTasks.length === 0 ? (
-            <p>Pas encore de tâche faite.</p>
+            <p>Popi attend encore la première tâche faite.</p>
           ) : (
             showDoneTasks && (
               <ul className="task-list">

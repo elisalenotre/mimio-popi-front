@@ -11,6 +11,7 @@ const {
   setTaskDoneStateMock,
   updateTaskMock,
   deleteTaskMock,
+  useOptionalAuthMock,
 } = vi.hoisted(() => ({
   getMyTasksMock: vi.fn(),
   getMyTaskCategoriesMock: vi.fn(),
@@ -19,6 +20,7 @@ const {
   setTaskDoneStateMock: vi.fn(),
   updateTaskMock: vi.fn(),
   deleteTaskMock: vi.fn(),
+  useOptionalAuthMock: vi.fn(),
 }));
 
 vi.mock("../../services/task/taskService", () => ({
@@ -31,11 +33,21 @@ vi.mock("../../services/task/taskService", () => ({
   deleteTask: deleteTaskMock,
 }));
 
+vi.mock("../../contexts/AuthContext", async () => {
+  const actual = await vi.importActual<typeof import("../../contexts/AuthContext")>("../../contexts/AuthContext");
+
+  return {
+    ...actual,
+    useOptionalAuth: useOptionalAuthMock,
+  };
+});
+
 import TasksPage from "./TasksPage";
 
 describe("TasksPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useOptionalAuthMock.mockReturnValue(undefined);
 
     getMyTasksMock.mockResolvedValue([]);
     initializeMyDefaultTaskCategoriesMock.mockResolvedValue(undefined);
@@ -66,6 +78,29 @@ describe("TasksPage", () => {
     }));
 
     deleteTaskMock.mockResolvedValue("deleted");
+  });
+
+  it("shows mascot bubble with user pseudo when available", async () => {
+    useOptionalAuthMock.mockReturnValue({
+      user: {
+        email: "elisa@example.com",
+        user_metadata: {
+          display_name: "Elisa",
+        },
+      },
+      session: null,
+      loading: false,
+    });
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    expect(
+      await screen.findByText("Hé, par ici, Elisa ! Clique dans ma main pour créer une tâche !")
+    ).toBeInTheDocument();
   });
 
   it("edits task fields and persists updates in the list", async () => {
@@ -107,7 +142,7 @@ describe("TasksPage", () => {
     const titleInput = screen.getByLabelText("Titre");
     await user.clear(titleInput);
     await user.type(titleInput, "  Titre mis a jour  ");
-    await user.selectOptions(screen.getByLabelText("Categorie (optionnel)"), "c-2");
+        await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "c-2");
     await user.type(screen.getByLabelText("Date (optionnel)"), "2026-03-22");
     await user.click(screen.getByRole("button", { name: "Enregistrer" }));
 
@@ -121,7 +156,7 @@ describe("TasksPage", () => {
     });
 
     expect(await screen.findByText("Titre mis a jour")).toBeInTheDocument();
-    expect(screen.getByText("Modifications enregistrées.")).toBeInTheDocument();
+    expect(screen.getByText("Mimio a bien noté les changements.")).toBeInTheDocument();
   });
 
   it("shows init categories error and keeps add flow available", async () => {
@@ -144,7 +179,7 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Impossible d'initialiser tes catégories. Réessaie.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Popi n'a pas pu préparer tes catégories. Réessaie dans un instant.");
 
     await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
     await user.type(screen.getByLabelText("Titre"), "Tache sans categorie");
@@ -241,7 +276,7 @@ describe("TasksPage", () => {
     });
 
     expect(await screen.findByText("Version distante")).toBeInTheDocument();
-    expect(screen.getAllByText("Impossible d'enregistrer les modifications. Réessaie.").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Popi n'a pas réussi à enregistrer tes modifications. Réessaie.").length).toBeGreaterThan(0);
     expect(titleInput).toHaveValue("Nouvelle tentative");
   });
 
@@ -264,9 +299,9 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole("heading", { name: "Mes tâches" });
+    const addButtons = await screen.findAllByRole("button", { name: "Ajouter une tâche" });
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click(addButtons[0]);
     await user.type(screen.getByLabelText("Titre"), "  Payer facture  ");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
@@ -279,7 +314,7 @@ describe("TasksPage", () => {
     });
 
     expect(screen.getByText("Payer facture")).toBeInTheDocument();
-    expect(screen.getByText("tâche ajoutee.")).toBeInTheDocument();
+    expect(screen.getByText("Mimio a ajouté ta tâche avec soin.")).toBeInTheDocument();
   });
 
   it("creates a task with category and date", async () => {
@@ -305,7 +340,7 @@ describe("TasksPage", () => {
 
     await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
     await user.type(screen.getByLabelText("Titre"), "Reviser");
-    await user.selectOptions(screen.getByLabelText("Categorie (optionnel)"), "c-2");
+    await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "c-2");
     await user.type(screen.getByLabelText("Date (optionnel)"), "2026-03-17");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
@@ -316,6 +351,97 @@ describe("TasksPage", () => {
         dueDate: "2026-03-17",
       });
     });
+  });
+
+  it("removes task category when selecting no category in edit flow", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-edit-4",
+        title: "Tache categorie",
+        due_at: null,
+        is_done: false,
+        category_id: "c-2",
+        created_at: "2026-03-16",
+        category: { id: "c-2", name: "Travail" },
+      },
+    ]);
+
+    updateTaskMock.mockResolvedValueOnce({
+      id: "t-edit-4",
+      title: "Tache categorie",
+      notes: null,
+      due_at: null,
+      is_done: false,
+      category_id: null,
+      created_at: "2026-03-16",
+      category: null,
+    });
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Tache categorie");
+
+    await user.click(screen.getByRole("button", { name: "Actions pour Tache categorie" }));
+    await user.click(screen.getByRole("menuitem", { name: "Éditer" }));
+    await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "");
+    await user.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    await waitFor(() => {
+      expect(updateTaskMock).toHaveBeenCalledWith("t-edit-4", {
+        title: "Tache categorie",
+        notes: null,
+        categoryId: null,
+        dueDate: null,
+      });
+    });
+  });
+
+  it("informs user when selected category disappears during edit", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-edit-5",
+        title: "Tache category drift",
+        due_at: null,
+        is_done: false,
+        category_id: "c-1",
+        created_at: "2026-03-16",
+        category: { id: "c-1", name: "General" },
+      },
+    ]);
+
+    updateTaskMock.mockResolvedValueOnce({
+      id: "t-edit-5",
+      title: "Tache category drift",
+      notes: null,
+      due_at: null,
+      is_done: false,
+      category_id: null,
+      created_at: "2026-03-16",
+      category: null,
+    });
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Tache category drift");
+
+    await user.click(screen.getByRole("button", { name: "Actions pour Tache category drift" }));
+    await user.click(screen.getByRole("menuitem", { name: "Éditer" }));
+    await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "c-2");
+    await user.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    expect(await screen.findByText("Mimio a enregistré les changements, mais la catégorie n'existait plus alors je l'ai retirée.")).toBeInTheDocument();
   });
 
   it("blocks submit with blank title", async () => {
@@ -356,7 +482,7 @@ describe("TasksPage", () => {
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Impossible d'ajouter la tâche pour le moment. Reessaie.")).toBeInTheDocument();
+      expect(screen.getByText("Popi n'a pas réussi à ajouter la tâche pour le moment. Réessaie.")).toBeInTheDocument();
     });
 
     expect(titleInput).toHaveValue("Acheter pain");
@@ -385,7 +511,7 @@ describe("TasksPage", () => {
     await screen.findByRole("heading", { name: "Mes tâches" });
 
     await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
-    expect(screen.getByText("Categories indisponibles pour le moment. Tu peux quand meme ajouter une tâche simple.")).toBeInTheDocument();
+    expect(screen.getByText("Popi n'arrive pas à charger les catégories pour le moment.")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Titre"), "Course rapide");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
@@ -409,7 +535,7 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByText("Impossible de charger tes tâches. Réessaie.");
+    await screen.findByText("Popi n'arrive pas à charger tes tâches pour l'instant. Réessaie dans un petit moment.");
     await user.click(screen.getByRole("button", { name: "Réessayer" }));
 
     await waitFor(() => {
@@ -451,7 +577,7 @@ describe("TasksPage", () => {
     });
 
     expect(screen.queryByText("Tache a supprimer")).not.toBeInTheDocument();
-    expect(screen.getByText("Tâche supprimée.")).toBeInTheDocument();
+    expect(screen.getByText("Pouf, Mimio a supprimé la tâche.")).toBeInTheDocument();
   });
 
   it("keeps task visible when deletion is cancelled", async () => {
@@ -509,12 +635,11 @@ describe("TasksPage", () => {
     );
 
     await screen.findByText("Tache fragile");
-
     await user.click(screen.getByRole("button", { name: "Actions pour Tache fragile" }));
     await user.click(screen.getByRole("menuitem", { name: "Supprimer" }));
     await user.click(screen.getByRole("button", { name: "Supprimer" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Impossible de supprimer la tâche pour le moment. Réessaie.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Popi n'a pas réussi à supprimer la tâche pour le moment. Réessaie.");
     expect(screen.getByText("Tache fragile")).toBeInTheDocument();
   });
 
@@ -557,7 +682,7 @@ describe("TasksPage", () => {
       expect(setTaskDoneStateMock).toHaveBeenCalledWith("t-9", true);
     });
 
-    expect(await screen.findByText("Bravo, c'est fait.")).toBeInTheDocument();
+    expect(await screen.findByText("Youpi, Mimio coche cette tâche comme faite !")).toBeInTheDocument();
   });
 
   it("updates done state when unchecking a done task", async () => {
@@ -600,7 +725,7 @@ describe("TasksPage", () => {
       expect(setTaskDoneStateMock).toHaveBeenCalledWith("t-10", false);
     });
 
-    expect(await screen.findByText("Tâche remise à faire.")).toBeInTheDocument();
+    expect(await screen.findByText("Hop, Mimio remet cette tâche à faire.")).toBeInTheDocument();
   });
 
   it("rolls back checked state and shows error when toggle update fails", async () => {
@@ -635,7 +760,7 @@ describe("TasksPage", () => {
       expect(setTaskDoneStateMock).toHaveBeenCalledWith("t-11", true);
     });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Impossible de mettre à jour la tâche. Réessaie.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Popi n'a pas réussi à mettre à jour la tâche. Réessaie.");
 
     await waitFor(() => {
       expect(screen.getByRole("checkbox", { name: 'Marquer "Tache fragile" comme faite' })).not.toBeChecked();

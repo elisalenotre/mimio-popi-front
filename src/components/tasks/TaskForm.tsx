@@ -5,6 +5,7 @@ import type { CreateTaskInput, TaskCategory } from "../../types/tasks";
 type TaskFormProps = {
   categories: TaskCategory[];
   categoriesAvailable: boolean;
+  categoriesError?: string | null;
   mode?: "create" | "edit";
   initialValues?: {
     title?: string;
@@ -18,6 +19,7 @@ type TaskFormProps = {
 export function TaskForm({
   categories,
   categoriesAvailable,
+  categoriesError = null,
   mode = "create",
   initialValues,
   onSubmit,
@@ -81,8 +83,8 @@ export function TaskForm({
     } catch {
       setError(
         mode === "edit"
-          ? "Impossible d'enregistrer les modifications. Réessaie."
-          : "Impossible d'ajouter la tâche pour le moment. Reessaie."
+          ? "Popi n'a pas réussi à enregistrer les modifications. Réessaie."
+          : "Popi n'a pas réussi à ajouter la tâche pour le moment. Réessaie."
       );
     } finally {
       setSubmitting(false);
@@ -105,14 +107,14 @@ export function TaskForm({
       {showTitleError && <p role="alert">{titleError}</p>}
 
       <label htmlFor="task-category">
-        Categorie (optionnel)
+        Catégorie (optionnel)
         <select
           id="task-category"
           value={categoryId}
           onChange={(event) => setCategoryId(event.target.value)}
           disabled={!categoriesAvailable || submitting}
         >
-          <option value="">Aucune</option>
+          <option value="">Aucune catégorie</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -121,9 +123,11 @@ export function TaskForm({
         </select>
       </label>
 
-      {!categoriesAvailable && (
-        <p role="status">Categories indisponibles pour le moment. Tu peux quand meme ajouter une tâche simple.</p>
-      )}
+      {categoriesError && <p role="alert">{categoriesError}</p>}
+
+      {categoriesAvailable && categories.length === 0 && <p role="status">Popi n'a trouvé aucune catégorie pour l'instant.</p>}
+
+      {!categoriesAvailable && !categoriesError && <p role="status">Popi n'a trouvé aucune catégorie pour l'instant.</p>}
 
       <label htmlFor="task-notes">
         Notes (optionnel)

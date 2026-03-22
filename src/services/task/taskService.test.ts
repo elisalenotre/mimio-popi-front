@@ -265,6 +265,39 @@ describe("taskService", () => {
     expect(result.category).toEqual({ id: "c-3", name: "Etudes" });
   });
 
+  it("createTask stores null category when selected category is not owned by user", async () => {
+    tasksInsertSingleMock.mockResolvedValueOnce({
+      data: {
+        id: "t-3b",
+        title: "Reviser",
+        notes: null,
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+      },
+      error: null,
+    });
+
+    categoriesOrderMock.mockResolvedValueOnce({
+      data: [{ id: "c-1", name: "General" }],
+      error: null,
+    });
+
+    const result = await createTask({
+      title: "Reviser",
+      categoryId: "c-999",
+    });
+
+    expect(tasksInsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category_id: null,
+      })
+    );
+    expect(result.category_id).toBeNull();
+    expect(result.category).toBeNull();
+  });
+
   it("setTaskDoneState updates task status for current user", async () => {
     tasksUpdateSingleMock.mockResolvedValueOnce({
       data: {
@@ -328,6 +361,34 @@ describe("taskService", () => {
     expect(tasksUpdateEqIdMock).toHaveBeenCalledWith("id", "t-5");
     expect(tasksUpdateEqUserMock).toHaveBeenCalledWith("user_id", "user-1");
     expect(result.is_done).toBe(true);
+  });
+
+  it("updateTask stores null category when selected category is not owned by user", async () => {
+    tasksUpdateSingleMock.mockResolvedValueOnce({
+      data: {
+        id: "t-6",
+        title: "Titre",
+        notes: null,
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+      },
+      error: null,
+    });
+
+    categoriesOrderMock.mockResolvedValueOnce({
+      data: [{ id: "c-1", name: "General" }],
+      error: null,
+    });
+
+    await updateTask("t-6", {
+      categoryId: "c-999",
+    });
+
+    expect(tasksUpdateMock).toHaveBeenCalledWith({
+      category_id: null,
+    });
   });
 
   it("deleteTask deletes only current user task", async () => {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { TaskForm } from "../../components/tasks/TaskForm";
 import { TaskList } from "../../components/tasks/TaskList";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
+import { useOptionalAuth } from "../../contexts/AuthContext";
 import {
   createTask,
   deleteTask,
@@ -25,7 +26,21 @@ function toDateInputValue(dateIso: string | null) {
   return raw.includes("T") ? raw.slice(0, 10) : raw;
 }
 
+function normalizePseudo(raw: string | null | undefined) {
+  if (!raw) return null;
+
+  const normalized = raw.trim();
+  if (!normalized) return null;
+
+  if (normalized.length <= 24) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, 24).trim()}...`;
+}
+
 export default function TasksPage() {
+  const auth = useOptionalAuth();
   const [loading, setLoading] = useState(true);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -38,15 +53,29 @@ export default function TasksPage() {
   const [showMascotHint, setShowMascotHint] = useState(true);
 
   const [categoriesAvailable, setCategoriesAvailable] = useState(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [isClockVisible, setIsClockVisible] = useState(true);
 
+  const userMetadata = auth?.user?.user_metadata as Record<string, unknown> | null | undefined;
+  const pseudoFromMetadata =
+    (typeof userMetadata?.display_name === "string" && userMetadata.display_name) ||
+    (typeof userMetadata?.preferred_username === "string" && userMetadata.preferred_username) ||
+    (typeof userMetadata?.full_name === "string" && userMetadata.full_name) ||
+    (typeof userMetadata?.name === "string" && userMetadata.name) ||
+    null;
+
+  const pseudoFromEmail = auth?.user?.email ? auth.user.email.split("@")[0] : null;
+  const pseudo = normalizePseudo(pseudoFromMetadata ?? pseudoFromEmail);
+  const bubblePseudoSuffix = pseudo ? `${pseudo}` : "";
+
   const loadTaskData = async () => {
     setLoading(true);
     setLoadingError(null);
     setError(null);
+    setCategoriesError(null);
 
     let initError = false;
     try {
@@ -61,18 +90,20 @@ export default function TasksPage() {
       if (tasksResult.status === "fulfilled") {
         setTasks(tasksResult.value);
       } else {
-        setLoadingError("Impossible de charger tes tâches. Réessaie.");
+        setLoadingError("Popi n'arrive pas à charger tes tâches pour l'instant. Réessaie dans un petit moment.");
       }
 
       if (categoriesResult.status === "fulfilled") {
         setCategories(categoriesResult.value);
         setCategoriesAvailable(true);
+        setCategoriesError(null);
       } else {
         setCategoriesAvailable(false);
+        setCategoriesError("Popi n'arrive pas à charger les catégories pour le moment.");
       }
 
       if (initError) {
-        setError("Impossible d'initialiser tes catégories. Réessaie.");
+        setError("Popi n'a pas pu préparer tes catégories. Réessaie dans un instant.");
       }
     } finally {
       setLoading(false);
@@ -118,7 +149,12 @@ export default function TasksPage() {
 
     const created = await createTask(payload);
     setTasks((current) => [created, ...current.filter((task) => task.id !== created.id)]);
-    setSuccess("tâche ajoutee.");
+    const categoryWasRemoved = Boolean(payload.categoryId && created.category_id === null);
+    setSuccess(
+      categoryWasRemoved
+        ? "Mimio a ajouté ta tâche, mais la catégorie n'existait plus alors je l'ai retirée."
+        : "Mimio a ajouté ta tâche avec soin."
+    );
     setIsAddPanelOpen(false);
   };
 
@@ -144,7 +180,12 @@ export default function TasksPage() {
       });
 
       setTasks((current) => current.map((item) => (item.id === editingTask.id ? updated : item)));
-      setSuccess("Modifications enregistrées.");
+      const categoryWasRemoved = Boolean(payload.categoryId && updated.category_id === null);
+      setSuccess(
+        categoryWasRemoved
+          ? "Mimio a enregistré les changements, mais la catégorie n'existait plus alors je l'ai retirée."
+          : "Mimio a bien noté les changements."
+      );
       setEditingTask(null);
     } catch {
       try {
@@ -154,7 +195,7 @@ export default function TasksPage() {
         // Keeps current local list when refresh fails.
       }
 
-      setError("Impossible d'enregistrer les modifications. Réessaie.");
+      setError("Popi n'a pas réussi à enregistrer tes modifications. Réessaie.");
       throw new Error("task-update-failed");
     } finally {
       setUpdatingTaskIds((current) => current.filter((id) => id !== editingTask.id));
@@ -175,10 +216,10 @@ export default function TasksPage() {
     try {
       const updated = await setTaskDoneState(task.id, nextDone);
       setTasks((current) => current.map((item) => (item.id === task.id ? updated : item)));
-      setSuccess(nextDone ? "Bravo, c'est fait." : "Tâche remise à faire.");
+      setSuccess(nextDone ? "Youpi, Mimio coche cette tâche comme faite !" : "Hop, Mimio remet cette tâche à faire.");
     } catch {
       setTasks((current) => current.map((item) => (item.id === task.id ? { ...item, is_done: task.is_done } : item)));
-      setError("Impossible de mettre à jour la tâche. Réessaie.");
+      setError("Popi n'a pas réussi à mettre à jour la tâche. Réessaie.");
     } finally {
       setUpdatingTaskIds((current) => current.filter((id) => id !== task.id));
     }
@@ -225,18 +266,18 @@ export default function TasksPage() {
           // Keeps current local list when refresh fails.
         }
 
-        setSuccess("Cette tâche n'existe plus. La liste a été actualisée.");
+        setSuccess("Oups, cette tâche n'existe plus. Mimio a rafraîchi la liste.");
       } else {
         setTasks((current) => current.filter((task) => task.id !== taskId));
         if (editingTask?.id === taskId) {
           setEditingTask(null);
         }
-        setSuccess("Tâche supprimée.");
+        setSuccess("Pouf, Mimio a supprimé la tâche.");
       }
 
       setTaskPendingDelete(null);
     } catch {
-      setError("Impossible de supprimer la tâche pour le moment. Réessaie.");
+      setError("Popi n'a pas réussi à supprimer la tâche pour le moment. Réessaie.");
     } finally {
       setDeletingTaskIds((current) => current.filter((id) => id !== taskId));
     }
@@ -249,18 +290,18 @@ export default function TasksPage() {
         <div className="tasks-page-layout">
           <section className="tasks-page-header" aria-label="Bloc mes tâches">
             <h1>Mes tâches</h1>
-            <p>Saisis les choses que tu aimerais accomplir aujourd'hui en cliquant sur le "+" dans la main de Mimio.</p>
+            <p>Popi et Mimio t'aident à garder le cap: ajoute tes tâches en cliquant sur le "+" dans la main de Mimio.</p>
           </section>
 
           <aside className="tasks-page-status" aria-label="Colonne statut">
             <h3>Statut</h3>
-            <p>Bientot disponible.</p>
+            <p>Popi et Mimio préparent cette zone.</p>
           </aside>
 
           <main className="tasks-page-main" aria-label="Bloc liste des tâches">
             <h2 className="tasks-main-title">Liste des tâches</h2>
             <div className="tasks-loader" role="status" aria-live="polite">
-              <p>Chargement de tes tâches...</p>
+              <p>Popi et Mimio préparent tes tâches...</p>
             </div>
           </main>
         </div>
@@ -274,12 +315,12 @@ export default function TasksPage() {
       <div className="tasks-page-layout">
         <section className="tasks-page-header" aria-label="Bloc mes tâches">
           <h1>Mes tâches</h1>
-          <p>Saisis les choses que tu aimerais accomplir aujourd'hui en cliquant sur le "+" dans la main de Mimio.</p>
+          <p>Popi et Mimio t'aident à garder le cap: ajoute tes tâches en cliquant sur le "+" dans la main de Mimio.</p>
         </section>
 
         <aside className="tasks-page-status" aria-label="Colonne statut">
           <h3>Statut</h3>
-          <p>Zone reservee pour les indicateurs a venir.</p>
+          <p>Popi et Mimio préparent les indicateurs à venir.</p>
         </aside>
 
         <main className="tasks-page-main" aria-label="Bloc liste des tâches">
@@ -287,7 +328,7 @@ export default function TasksPage() {
         <div className="tasks-mascot-wrap">
           {showMascotHint && (
             <p className="task-help-bubble" role="status" aria-live="polite">
-              Pour ajouter une nouvelle tâche, c'est par ici par ici!
+              Hé, par ici, {bubblePseudoSuffix} ! Clique dans ma main pour créer une tâche !
             </p>
           )}
 
@@ -333,7 +374,7 @@ export default function TasksPage() {
           <button
             type="button"
             className="task-clock"
-            aria-label="Masquer le jour et l'heure"
+            aria-label="Masquer l'horloge de Popi"
             onClick={() => setIsClockVisible(false)}
           >
             <span className="task-clock__day">{dayLabel}</span>
@@ -343,10 +384,10 @@ export default function TasksPage() {
           <button
             type="button"
             className="task-clock-toggle"
-            aria-label="Afficher le jour et l'heure"
+            aria-label="Afficher l'horloge de Popi"
             onClick={() => setIsClockVisible(true)}
           >
-            Heure
+            Voir l'heure
           </button>
         )}
 
@@ -369,6 +410,7 @@ export default function TasksPage() {
               <TaskForm
                 categories={categories}
                 categoriesAvailable={categoriesAvailable}
+                categoriesError={categoriesError}
                 onSubmit={handleCreateTask}
               />
             </section>
@@ -401,6 +443,7 @@ export default function TasksPage() {
                 }}
                 categories={categories}
                 categoriesAvailable={categoriesAvailable}
+                categoriesError={categoriesError}
                 onSubmit={handleUpdateTask}
               />
             </section>

@@ -24,7 +24,7 @@ describe("TaskList", () => {
 
     render(<TaskList tasks={[]} onAddTask={onAddTask} onToggleDone={vi.fn()} />);
 
-    expect(screen.getByText("Tu n'as rien a faire pour l'instant.")).toBeInTheDocument();
+    expect(screen.getByText("Popi ne voit aucune tâche pour le moment.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
     expect(onAddTask).toHaveBeenCalledTimes(1);
   });
