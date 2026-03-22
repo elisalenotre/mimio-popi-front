@@ -1,3 +1,21 @@
+.tasks-loader {
+  margin-top: 0.9rem;
+  padding: 1rem;
+  border: 2px dashed rgba(46, 47, 47, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.tasks-error-state {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  border: 2px solid rgba(247, 108, 94, 0.58);
+  border-radius: 10px;
+  background: rgba(247, 108, 94, 0.16);
+  padding: 0.85rem;
+}
+
 .tasks-mascot-wrap {
   width: fit-content;
   margin: 0;

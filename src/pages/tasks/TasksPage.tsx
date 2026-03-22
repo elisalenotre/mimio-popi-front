@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { TaskForm } from "../../components/tasks/TaskForm";
 import { TaskList } from "../../components/tasks/TaskList";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
-import { createTask, getMyTaskCategories, getMyTasks } from "../../services/task/taskService";
+import { createTask, getMyTaskCategories, getMyTasks, setTaskDoneState } from "../../services/task/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
 import happyMascot from "../../assets/popi-mimio-very-happy.svg";
 import plusIcon from "../../assets/icons/Plus.svg";
@@ -10,8 +10,10 @@ import "./TasksPage.css";
 
 export default function TasksPage() {
   const [loading, setLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<TaskCategory[]>([]);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
   const [showMascotHint, setShowMascotHint] = useState(true);
 
@@ -21,27 +23,34 @@ export default function TasksPage() {
   const [now, setNow] = useState(() => new Date());
   const [isClockVisible, setIsClockVisible] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [tasksResult, categoriesResult] = await Promise.allSettled([getMyTasks(), getMyTaskCategories()]);
+  const loadTaskData = async () => {
+    setLoading(true);
+    setLoadingError(null);
 
-        if (tasksResult.status === "fulfilled") {
-          setTasks(tasksResult.value);
-        } else {
-          setError("Impossible de charger les tâches pour le moment.");
-        }
+    try {
+      const [tasksResult, categoriesResult] = await Promise.allSettled([getMyTasks(), getMyTaskCategories()]);
 
-        if (categoriesResult.status === "fulfilled") {
-          setCategories(categoriesResult.value);
-          setCategoriesAvailable(true);
-        } else {
-          setCategoriesAvailable(false);
-        }
-      } finally {
-        setLoading(false);
+      if (tasksResult.status === "fulfilled") {
+        setTasks(tasksResult.value);
+      } else {
+        setLoadingError("Impossible de charger tes tâches. Réessaie.");
       }
-    })();
+
+      if (categoriesResult.status === "fulfilled") {
+        setCategories(categoriesResult.value);
+        setCategoriesAvailable(true);
+      } else {
+        setCategoriesAvailable(false);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadTaskData();
+    // Runs once at mount to get initial task data.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -76,12 +85,49 @@ export default function TasksPage() {
     setSuccess(null);
 
     const created = await createTask(payload);
-    setTasks((current) => [created, ...current]);
+    setTasks((current) => [created, ...current.filter((task) => task.id !== created.id)]);
     setSuccess("tâche ajoutee.");
     setIsAddPanelOpen(false);
   };
 
-  if (loading) return <div>Chargement...</div>;
+  const handleToggleDone = async (task: Task, nextDone: boolean) => {
+    setError(null);
+    setSuccess(null);
+    setUpdatingTaskId(task.id);
+
+    setTasks((current) => current.map((item) => (item.id === task.id ? { ...item, is_done: nextDone } : item)));
+
+    try {
+      const updated = await setTaskDoneState(task.id, nextDone);
+      setTasks((current) => current.map((item) => (item.id === task.id ? updated : item)));
+      setSuccess(nextDone ? "Tâche marquee comme faite." : "Tâche remise a faire.");
+    } catch {
+      setTasks((current) => current.map((item) => (item.id === task.id ? { ...item, is_done: task.is_done } : item)));
+      setError("Impossible de mettre a jour cette tâche pour le moment.");
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  };
+
+  const handleOpenTask = (task: Task) => {
+    setSuccess(`Ouverture de \"${task.title}\" bientot disponible.`);
+  };
+
+  const handleOpenTaskMenu = (task: Task) => {
+    setSuccess(`Menu d'actions pour \"${task.title}\" bientot disponible.`);
+  };
+
+  if (loading) {
+    return (
+      <main>
+        <AppNavbar />
+        <h1>Mes tâches</h1>
+        <div className="tasks-loader" role="status" aria-live="polite">
+          <p>Chargement de tes tâches...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>
@@ -110,6 +156,15 @@ export default function TasksPage() {
         </button>
       </div>
 
+      {loadingError ? (
+        <div className="tasks-error-state" role="alert">
+          <p>{loadingError}</p>
+          <button type="button" onClick={() => void loadTaskData()}>
+            Réessayer
+          </button>
+        </div>
+      ) : null}
+
       {error && <p role="alert">{error}</p>}
       {success && <p role="status">{success}</p>}
 
@@ -117,7 +172,17 @@ export default function TasksPage() {
 
       <section>
         <h2>Liste</h2>
-        <TaskList tasks={tasks} />
+        <TaskList
+          tasks={tasks}
+          updatingTaskId={updatingTaskId}
+          onAddTask={() => {
+            setShowMascotHint(false);
+            setIsAddPanelOpen(true);
+          }}
+          onToggleDone={handleToggleDone}
+          onOpenTask={handleOpenTask}
+          onOpenTaskMenu={handleOpenTaskMenu}
+        />
       </section>
 
       {isClockVisible ? (

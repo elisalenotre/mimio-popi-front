@@ -3,16 +3,18 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getMyTasksMock, getMyTaskCategoriesMock, createTaskMock } = vi.hoisted(() => ({
+const { getMyTasksMock, getMyTaskCategoriesMock, createTaskMock, setTaskDoneStateMock } = vi.hoisted(() => ({
   getMyTasksMock: vi.fn(),
   getMyTaskCategoriesMock: vi.fn(),
   createTaskMock: vi.fn(),
+  setTaskDoneStateMock: vi.fn(),
 }));
 
 vi.mock("../../services/task/taskService", () => ({
   getMyTasks: getMyTasksMock,
   getMyTaskCategories: getMyTaskCategoriesMock,
   createTask: createTaskMock,
+  setTaskDoneState: setTaskDoneStateMock,
 }));
 
 import TasksPage from "./TasksPage";
@@ -26,6 +28,16 @@ describe("TasksPage", () => {
       { id: "c-1", name: "General" },
       { id: "c-2", name: "Travail" },
     ]);
+
+    setTaskDoneStateMock.mockImplementation(async (taskId: string, isDone: boolean) => ({
+      id: taskId,
+      title: "Mise a jour",
+      due_at: null,
+      is_done: isDone,
+      category_id: null,
+      created_at: "2026-03-16",
+      category: null,
+    }));
   });
 
   it("creates a minimal task with title only", async () => {
@@ -49,7 +61,7 @@ describe("TasksPage", () => {
 
     await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
+    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
     await user.type(screen.getByLabelText("Titre"), "  Payer facture  ");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
@@ -62,7 +74,7 @@ describe("TasksPage", () => {
     });
 
     expect(screen.getByText("Payer facture")).toBeInTheDocument();
-    expect(screen.getByRole("status", { name: "" })).toHaveTextContent("tâche ajoutee.");
+    expect(screen.getByText("tâche ajoutee.")).toBeInTheDocument();
   });
 
   it("creates a task with category and date", async () => {
@@ -86,7 +98,7 @@ describe("TasksPage", () => {
 
     await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
+    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
     await user.type(screen.getByLabelText("Titre"), "Reviser");
     await user.selectOptions(screen.getByLabelText("Categorie (optionnel)"), "c-2");
     await user.type(screen.getByLabelText("Date (optionnel)"), "2026-03-17");
@@ -112,7 +124,7 @@ describe("TasksPage", () => {
 
     await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
+    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
     await user.type(screen.getByLabelText("Titre"), "   ");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
@@ -133,7 +145,7 @@ describe("TasksPage", () => {
 
     await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
+    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
     const titleInput = screen.getByLabelText("Titre");
     await user.type(titleInput, "Acheter pain");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
@@ -167,7 +179,7 @@ describe("TasksPage", () => {
 
     await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getByRole("button", { name: "Ajouter une tâche" }));
+    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
     expect(screen.getByText("Categories indisponibles pour le moment. Tu peux quand meme ajouter une tâche simple.")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Titre"), "Course rapide");
@@ -177,6 +189,66 @@ describe("TasksPage", () => {
       title: "Course rapide",
       categoryId: null,
       dueDate: null,
+    });
+  });
+
+  it("shows loading error and allows retry", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockRejectedValueOnce(new Error("network"));
+    getMyTasksMock.mockResolvedValueOnce([]);
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Impossible de charger tes tâches. Réessaie.");
+    await user.click(screen.getByRole("button", { name: "Réessayer" }));
+
+    await waitFor(() => {
+      expect(getMyTasksMock).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it("updates done state when checking a task", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-9",
+        title: "Tache a faire",
+        due_at: "2026-03-17",
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+
+    setTaskDoneStateMock.mockResolvedValueOnce({
+      id: "t-9",
+      title: "Tache a faire",
+      due_at: "2026-03-17",
+      is_done: true,
+      category_id: null,
+      created_at: "2026-03-16",
+      category: null,
+    });
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Tache a faire");
+
+    await user.click(screen.getByRole("checkbox", { name: 'Marquer "Tache a faire" comme faite' }));
+
+    await waitFor(() => {
+      expect(setTaskDoneStateMock).toHaveBeenCalledWith("t-9", true);
     });
   });
 });

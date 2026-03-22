@@ -5,10 +5,17 @@ const {
   getUserMock,
   tasksSelectMock,
   tasksEqMock,
-  tasksOrderMock,
+  tasksOrderPrimaryMock,
+  tasksOrderSecondaryMock,
+  tasksOrderTertiaryMock,
   tasksInsertMock,
   tasksInsertSelectMock,
   tasksInsertSingleMock,
+  tasksUpdateMock,
+  tasksUpdateEqIdMock,
+  tasksUpdateEqUserMock,
+  tasksUpdateSelectMock,
+  tasksUpdateSingleMock,
   categoriesSelectMock,
   categoriesEqMock,
   categoriesOrderMock,
@@ -17,10 +24,17 @@ const {
   getUserMock: vi.fn(),
   tasksSelectMock: vi.fn(),
   tasksEqMock: vi.fn(),
-  tasksOrderMock: vi.fn(),
+  tasksOrderPrimaryMock: vi.fn(),
+  tasksOrderSecondaryMock: vi.fn(),
+  tasksOrderTertiaryMock: vi.fn(),
   tasksInsertMock: vi.fn(),
   tasksInsertSelectMock: vi.fn(),
   tasksInsertSingleMock: vi.fn(),
+  tasksUpdateMock: vi.fn(),
+  tasksUpdateEqIdMock: vi.fn(),
+  tasksUpdateEqUserMock: vi.fn(),
+  tasksUpdateSelectMock: vi.fn(),
+  tasksUpdateSingleMock: vi.fn(),
   categoriesSelectMock: vi.fn(),
   categoriesEqMock: vi.fn(),
   categoriesOrderMock: vi.fn(),
@@ -35,17 +49,24 @@ vi.mock("../../lib/supabaseClient", () => ({
   },
 }));
 
-import { createTask, getMyTaskCategories, getMyTasks } from "./taskService";
+import { createTask, getMyTaskCategories, getMyTasks, setTaskDoneState } from "./taskService";
 
 describe("taskService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
     tasksSelectMock.mockReturnValue({ eq: tasksEqMock });
-    tasksEqMock.mockReturnValue({ order: tasksOrderMock });
+    tasksEqMock.mockReturnValue({ order: tasksOrderPrimaryMock });
+    tasksOrderPrimaryMock.mockReturnValue({ order: tasksOrderSecondaryMock });
+    tasksOrderSecondaryMock.mockReturnValue({ order: tasksOrderTertiaryMock });
 
     tasksInsertMock.mockReturnValue({ select: tasksInsertSelectMock });
     tasksInsertSelectMock.mockReturnValue({ single: tasksInsertSingleMock });
+
+    tasksUpdateMock.mockReturnValue({ eq: tasksUpdateEqIdMock });
+    tasksUpdateEqIdMock.mockReturnValue({ eq: tasksUpdateEqUserMock });
+    tasksUpdateEqUserMock.mockReturnValue({ select: tasksUpdateSelectMock });
+    tasksUpdateSelectMock.mockReturnValue({ single: tasksUpdateSingleMock });
 
     categoriesSelectMock.mockReturnValue({ eq: categoriesEqMock });
     categoriesEqMock.mockReturnValue({ order: categoriesOrderMock });
@@ -55,6 +76,7 @@ describe("taskService", () => {
         return {
           select: tasksSelectMock,
           insert: tasksInsertMock,
+          update: tasksUpdateMock,
         };
       }
 
@@ -94,7 +116,7 @@ describe("taskService", () => {
   });
 
   it("getMyTasks returns tasks with resolved category when available", async () => {
-    tasksOrderMock.mockResolvedValueOnce({
+    tasksOrderTertiaryMock.mockResolvedValueOnce({
       data: [
         {
           id: "t-1",
@@ -116,6 +138,10 @@ describe("taskService", () => {
     });
 
     const result = await getMyTasks();
+
+    expect(tasksOrderPrimaryMock).toHaveBeenCalledWith("is_done", { ascending: true });
+    expect(tasksOrderSecondaryMock).toHaveBeenCalledWith("due_at", { ascending: true, nullsFirst: false });
+    expect(tasksOrderTertiaryMock).toHaveBeenCalledWith("created_at", { ascending: false });
 
     expect(result).toEqual([
       {
@@ -189,5 +215,32 @@ describe("taskService", () => {
     });
 
     expect(result.category).toEqual({ id: "c-3", name: "Etudes" });
+  });
+
+  it("setTaskDoneState updates task status for current user", async () => {
+    tasksUpdateSingleMock.mockResolvedValueOnce({
+      data: {
+        id: "t-1",
+        title: "Payer facture",
+        due_at: "2026-03-17",
+        is_done: true,
+        category_id: "c-2",
+        created_at: "2026-03-16",
+      },
+      error: null,
+    });
+
+    categoriesOrderMock.mockResolvedValueOnce({
+      data: [{ id: "c-2", name: "Travail" }],
+      error: null,
+    });
+
+    const result = await setTaskDoneState("t-1", true);
+
+    expect(tasksUpdateMock).toHaveBeenCalledWith({ is_done: true });
+    expect(tasksUpdateEqIdMock).toHaveBeenCalledWith("id", "t-1");
+    expect(tasksUpdateEqUserMock).toHaveBeenCalledWith("user_id", "user-1");
+    expect(result.is_done).toBe(true);
+    expect(result.category).toEqual({ id: "c-2", name: "Travail" });
   });
 });

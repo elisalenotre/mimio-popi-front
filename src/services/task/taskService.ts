@@ -68,6 +68,8 @@ export async function getMyTasks() {
     .from("tasks")
     .select("id, title, due_at, is_done, category_id, created_at")
     .eq("user_id", userId)
+    .order("is_done", { ascending: true })
+    .order("due_at", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
 
   if (error) throw error;
@@ -80,6 +82,29 @@ export async function getMyTasks() {
   }
 
   return ((data ?? []) as TaskRow[]).map((row) => toTask(row, categoriesById));
+}
+
+export async function setTaskDoneState(taskId: string, isDone: boolean) {
+  const userId = await getCurrentUserId();
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .update({ is_done: isDone })
+    .eq("id", taskId)
+    .eq("user_id", userId)
+    .select("id, title, due_at, is_done, category_id, created_at")
+    .single();
+
+  if (error) throw error;
+
+  let categoriesById = new Map<string, TaskCategory>();
+  try {
+    categoriesById = await fetchCategoriesMap(userId);
+  } catch {
+    categoriesById = new Map<string, TaskCategory>();
+  }
+
+  return toTask(data as TaskRow, categoriesById);
 }
 
 export async function createTask(input: CreateTaskInput) {
