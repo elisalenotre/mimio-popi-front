@@ -3,9 +3,18 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getMyTasksMock, getMyTaskCategoriesMock, createTaskMock, setTaskDoneStateMock, updateTaskMock, deleteTaskMock } = vi.hoisted(() => ({
+const {
+  getMyTasksMock,
+  getMyTaskCategoriesMock,
+  initializeMyDefaultTaskCategoriesMock,
+  createTaskMock,
+  setTaskDoneStateMock,
+  updateTaskMock,
+  deleteTaskMock,
+} = vi.hoisted(() => ({
   getMyTasksMock: vi.fn(),
   getMyTaskCategoriesMock: vi.fn(),
+  initializeMyDefaultTaskCategoriesMock: vi.fn(),
   createTaskMock: vi.fn(),
   setTaskDoneStateMock: vi.fn(),
   updateTaskMock: vi.fn(),
@@ -15,6 +24,7 @@ const { getMyTasksMock, getMyTaskCategoriesMock, createTaskMock, setTaskDoneStat
 vi.mock("../../services/task/taskService", () => ({
   getMyTasks: getMyTasksMock,
   getMyTaskCategories: getMyTaskCategoriesMock,
+  initializeMyDefaultTaskCategories: initializeMyDefaultTaskCategoriesMock,
   createTask: createTaskMock,
   setTaskDoneState: setTaskDoneStateMock,
   updateTask: updateTaskMock,
@@ -28,6 +38,7 @@ describe("TasksPage", () => {
     vi.clearAllMocks();
 
     getMyTasksMock.mockResolvedValue([]);
+    initializeMyDefaultTaskCategoriesMock.mockResolvedValue(undefined);
     getMyTaskCategoriesMock.mockResolvedValue([
       { id: "c-1", name: "General" },
       { id: "c-2", name: "Travail" },
@@ -111,6 +122,41 @@ describe("TasksPage", () => {
 
     expect(await screen.findByText("Titre mis a jour")).toBeInTheDocument();
     expect(screen.getByText("Modifications enregistrées.")).toBeInTheDocument();
+  });
+
+  it("shows init categories error and keeps add flow available", async () => {
+    const user = userEvent.setup();
+
+    initializeMyDefaultTaskCategoriesMock.mockRejectedValueOnce(new Error("network"));
+    createTaskMock.mockResolvedValueOnce({
+      id: "t-99",
+      title: "Tache sans categorie",
+      due_at: null,
+      is_done: false,
+      category_id: null,
+      created_at: "2026-03-16",
+      category: null,
+    });
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Impossible d'initialiser tes catégories. Réessaie.");
+
+    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.type(screen.getByLabelText("Titre"), "Tache sans categorie");
+    await user.click(screen.getByRole("button", { name: "Ajouter" }));
+
+    await waitFor(() => {
+      expect(createTaskMock).toHaveBeenCalledWith({
+        title: "Tache sans categorie",
+        categoryId: null,
+        dueDate: null,
+      });
+    });
   });
 
   it("prevents edit save with blank title", async () => {

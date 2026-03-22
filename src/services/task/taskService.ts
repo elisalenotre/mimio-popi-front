@@ -17,6 +17,20 @@ type CategoryRow = {
   name: string;
 };
 
+type CategoryBootstrapPreferences = {
+  task_categories_init_started?: boolean;
+  task_categories_init_completed?: boolean;
+};
+
+const DEFAULT_TASK_CATEGORIES: Array<{ name: string; color: string }> = [
+  { name: "Études", color: "#3B82F6" },
+  { name: "Travail", color: "#F59E0B" },
+  { name: "Social", color: "#10B981" },
+  { name: "Santé", color: "#EF4444" },
+  { name: "Maison", color: "#8B5CF6" },
+  { name: "Loisirs", color: "#EC4899" },
+];
+
 async function getCurrentUserId() {
   const { data, error } = await supabase.auth.getUser();
   if (error) throw error;
@@ -47,6 +61,106 @@ async function fetchCategoriesMap(userId: string) {
 
   const rows = (data ?? []) as CategoryRow[];
   return new Map(rows.map((category) => [category.id, category as TaskCategory]));
+}
+
+async function readCategoryBootstrapPreferences(userId: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("preferences")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const preferences = (data?.preferences ?? {}) as Record<string, unknown>;
+
+  return {
+    preferences,
+    started: preferences.task_categories_init_started === true,
+    completed: preferences.task_categories_init_completed === true,
+  };
+}
+
+async function writeCategoryBootstrapPreferences(
+  userId: string,
+  preferences: Record<string, unknown>,
+  patch: CategoryBootstrapPreferences
+) {
+  const nextPreferences = {
+    ...preferences,
+    ...patch,
+  };
+
+  const { error } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: userId,
+        preferences: nextPreferences,
+      },
+      { onConflict: "id" }
+    );
+
+  if (error) throw error;
+  return nextPreferences;
+}
+
+export async function initializeMyDefaultTaskCategories() {
+  const userId = await getCurrentUserId();
+
+  const profileState = await readCategoryBootstrapPreferences(userId);
+  if (profileState.completed) {
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("name")
+    .eq("user_id", userId);
+
+  if (error) throw error;
+
+  const existingCategoryNames = new Set(((data ?? []) as Array<{ name: string }>).map((row) => row.name));
+  const shouldSeedDefaults = existingCategoryNames.size === 0 || profileState.started;
+
+  if (!shouldSeedDefaults) {
+    await writeCategoryBootstrapPreferences(userId, profileState.preferences, {
+      task_categories_init_completed: true,
+      task_categories_init_started: false,
+    });
+    return;
+  }
+
+  let currentPreferences = profileState.preferences;
+  if (!profileState.started) {
+    currentPreferences = await writeCategoryBootstrapPreferences(userId, profileState.preferences, {
+      task_categories_init_started: true,
+      task_categories_init_completed: false,
+    });
+  }
+
+  const missingDefaults = DEFAULT_TASK_CATEGORIES.filter((category) => !existingCategoryNames.has(category.name));
+  if (missingDefaults.length > 0) {
+    const { error: upsertError } = await supabase.from("categories").upsert(
+      missingDefaults.map((category) => ({
+        user_id: userId,
+        name: category.name,
+        color: category.color,
+        is_default: true,
+      })),
+      {
+        onConflict: "user_id,name",
+        ignoreDuplicates: true,
+      }
+    );
+
+    if (upsertError) throw upsertError;
+  }
+
+  await writeCategoryBootstrapPreferences(userId, currentPreferences, {
+    task_categories_init_completed: true,
+    task_categories_init_started: false,
+  });
 }
 
 export async function getMyTaskCategories() {

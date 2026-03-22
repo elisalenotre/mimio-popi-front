@@ -2,7 +2,15 @@ import { useEffect, useState } from "react";
 import { TaskForm } from "../../components/tasks/TaskForm";
 import { TaskList } from "../../components/tasks/TaskList";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
-import { createTask, deleteTask, getMyTaskCategories, getMyTasks, setTaskDoneState, updateTask } from "../../services/task/taskService";
+import {
+  createTask,
+  deleteTask,
+  getMyTaskCategories,
+  getMyTasks,
+  initializeMyDefaultTaskCategories,
+  setTaskDoneState,
+  updateTask,
+} from "../../services/task/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
 import happyMascot from "../../assets/popi-mimio-very-happy.svg";
 import plusIcon from "../../assets/icons/Plus.svg";
@@ -38,6 +46,14 @@ export default function TasksPage() {
   const loadTaskData = async () => {
     setLoading(true);
     setLoadingError(null);
+    setError(null);
+
+    let initError = false;
+    try {
+      await initializeMyDefaultTaskCategories();
+    } catch {
+      initError = true;
+    }
 
     try {
       const [tasksResult, categoriesResult] = await Promise.allSettled([getMyTasks(), getMyTaskCategories()]);
@@ -53,6 +69,10 @@ export default function TasksPage() {
         setCategoriesAvailable(true);
       } else {
         setCategoriesAvailable(false);
+      }
+
+      if (initError) {
+        setError("Impossible d'initialiser tes catégories. Réessaie.");
       }
     } finally {
       setLoading(false);

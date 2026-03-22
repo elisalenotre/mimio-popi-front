@@ -23,6 +23,11 @@ const {
   categoriesSelectMock,
   categoriesEqMock,
   categoriesOrderMock,
+  categoriesUpsertMock,
+  profilesSelectMock,
+  profilesEqMock,
+  profilesMaybeSingleMock,
+  profilesUpsertMock,
 } = vi.hoisted(() => ({
   fromMock: vi.fn(),
   getUserMock: vi.fn(),
@@ -46,6 +51,11 @@ const {
   categoriesSelectMock: vi.fn(),
   categoriesEqMock: vi.fn(),
   categoriesOrderMock: vi.fn(),
+  categoriesUpsertMock: vi.fn(),
+  profilesSelectMock: vi.fn(),
+  profilesEqMock: vi.fn(),
+  profilesMaybeSingleMock: vi.fn(),
+  profilesUpsertMock: vi.fn(),
 }));
 
 vi.mock("../../lib/supabaseClient", () => ({
@@ -57,7 +67,15 @@ vi.mock("../../lib/supabaseClient", () => ({
   },
 }));
 
-import { createTask, deleteTask, getMyTaskCategories, getMyTasks, setTaskDoneState, updateTask } from "./taskService";
+import {
+  createTask,
+  deleteTask,
+  getMyTaskCategories,
+  getMyTasks,
+  initializeMyDefaultTaskCategories,
+  setTaskDoneState,
+  updateTask,
+} from "./taskService";
 
 describe("taskService", () => {
   beforeEach(() => {
@@ -83,6 +101,9 @@ describe("taskService", () => {
     categoriesSelectMock.mockReturnValue({ eq: categoriesEqMock });
     categoriesEqMock.mockReturnValue({ order: categoriesOrderMock });
 
+    profilesSelectMock.mockReturnValue({ eq: profilesEqMock });
+    profilesEqMock.mockReturnValue({ maybeSingle: profilesMaybeSingleMock });
+
     fromMock.mockImplementation((table: string) => {
       if (table === "tasks") {
         return {
@@ -96,6 +117,14 @@ describe("taskService", () => {
       if (table === "categories") {
         return {
           select: categoriesSelectMock,
+          upsert: categoriesUpsertMock,
+        };
+      }
+
+      if (table === "profiles") {
+        return {
+          select: profilesSelectMock,
+          upsert: profilesUpsertMock,
         };
       }
 
@@ -324,5 +353,112 @@ describe("taskService", () => {
     const result = await deleteTask("t-404");
 
     expect(result).toBe("missing");
+  });
+
+  it("initializeMyDefaultTaskCategories seeds defaults once for first usage", async () => {
+    profilesMaybeSingleMock.mockResolvedValueOnce({
+      data: {
+        preferences: {},
+      },
+      error: null,
+    });
+
+    categoriesEqMock.mockResolvedValueOnce({
+      data: [],
+      error: null,
+    });
+
+    profilesUpsertMock.mockResolvedValueOnce({ error: null });
+    categoriesUpsertMock.mockResolvedValueOnce({ error: null });
+    profilesUpsertMock.mockResolvedValueOnce({ error: null });
+
+    await initializeMyDefaultTaskCategories();
+
+    expect(categoriesUpsertMock).toHaveBeenCalledTimes(1);
+    expect(categoriesUpsertMock).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "Études", is_default: true, user_id: "user-1" }),
+        expect.objectContaining({ name: "Travail", is_default: true, user_id: "user-1" }),
+        expect.objectContaining({ name: "Social", is_default: true, user_id: "user-1" }),
+        expect.objectContaining({ name: "Santé", is_default: true, user_id: "user-1" }),
+        expect.objectContaining({ name: "Maison", is_default: true, user_id: "user-1" }),
+        expect.objectContaining({ name: "Loisirs", is_default: true, user_id: "user-1" }),
+      ]),
+      { onConflict: "user_id,name", ignoreDuplicates: true }
+    );
+
+    expect(profilesUpsertMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("initializeMyDefaultTaskCategories does not insert defaults when user already has categories", async () => {
+    profilesMaybeSingleMock.mockResolvedValueOnce({
+      data: {
+        preferences: {},
+      },
+      error: null,
+    });
+
+    categoriesEqMock.mockResolvedValueOnce({
+      data: [{ name: "Perso" }],
+      error: null,
+    });
+
+    profilesUpsertMock.mockResolvedValueOnce({ error: null });
+
+    await initializeMyDefaultTaskCategories();
+
+    expect(categoriesUpsertMock).not.toHaveBeenCalled();
+    expect(profilesUpsertMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("initializeMyDefaultTaskCategories completes partial creation when bootstrap already started", async () => {
+    profilesMaybeSingleMock.mockResolvedValueOnce({
+      data: {
+        preferences: {
+          task_categories_init_started: true,
+          task_categories_init_completed: false,
+        },
+      },
+      error: null,
+    });
+
+    categoriesEqMock.mockResolvedValueOnce({
+      data: [{ name: "Études" }, { name: "Travail" }, { name: "Social" }],
+      error: null,
+    });
+
+    categoriesUpsertMock.mockResolvedValueOnce({ error: null });
+    profilesUpsertMock.mockResolvedValueOnce({ error: null });
+
+    await initializeMyDefaultTaskCategories();
+
+    expect(categoriesUpsertMock).toHaveBeenCalledTimes(1);
+    const missingInserted = categoriesUpsertMock.mock.calls[0]?.[0] as Array<{ name: string }>;
+    expect(missingInserted).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "Santé" }),
+        expect.objectContaining({ name: "Maison" }),
+        expect.objectContaining({ name: "Loisirs" }),
+      ])
+    );
+    expect(profilesUpsertMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("initializeMyDefaultTaskCategories is a no-op on reconnect when bootstrap is already completed", async () => {
+    profilesMaybeSingleMock.mockResolvedValueOnce({
+      data: {
+        preferences: {
+          task_categories_init_started: false,
+          task_categories_init_completed: true,
+        },
+      },
+      error: null,
+    });
+
+    await initializeMyDefaultTaskCategories();
+
+    expect(categoriesSelectMock).not.toHaveBeenCalled();
+    expect(categoriesUpsertMock).not.toHaveBeenCalled();
+    expect(profilesUpsertMock).not.toHaveBeenCalled();
   });
 });
