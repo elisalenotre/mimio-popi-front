@@ -2,11 +2,20 @@ import { useEffect, useState } from "react";
 import { TaskForm } from "../../components/tasks/TaskForm";
 import { TaskList } from "../../components/tasks/TaskList";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
-import { createTask, getMyTaskCategories, getMyTasks, setTaskDoneState } from "../../services/task/taskService";
+import { createTask, getMyTaskCategories, getMyTasks, setTaskDoneState, updateTask } from "../../services/task/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
 import happyMascot from "../../assets/popi-mimio-very-happy.svg";
 import plusIcon from "../../assets/icons/Plus.svg";
 import "./TasksPage.css";
+
+function toDateInputValue(dateIso: string | null) {
+  if (!dateIso) return "";
+
+  const raw = dateIso.trim();
+  if (!raw) return "";
+
+  return raw.includes("T") ? raw.slice(0, 10) : raw;
+}
 
 export default function TasksPage() {
   const [loading, setLoading] = useState(true);
@@ -15,6 +24,7 @@ export default function TasksPage() {
   const [categories, setCategories] = useState<TaskCategory[]>([]);
   const [updatingTaskIds, setUpdatingTaskIds] = useState<string[]>([]);
   const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showMascotHint, setShowMascotHint] = useState(true);
 
   const [categoriesAvailable, setCategoriesAvailable] = useState(true);
@@ -90,6 +100,45 @@ export default function TasksPage() {
     setIsAddPanelOpen(false);
   };
 
+  const handleUpdateTask = async (payload: CreateTaskInput) => {
+    if (!editingTask) {
+      return;
+    }
+
+    if (updatingTaskIds.includes(editingTask.id)) {
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+    setUpdatingTaskIds((current) => (current.includes(editingTask.id) ? current : [...current, editingTask.id]));
+
+    try {
+      const updated = await updateTask(editingTask.id, {
+        title: payload.title,
+        notes: payload.notes,
+        categoryId: payload.categoryId,
+        dueDate: payload.dueDate,
+      });
+
+      setTasks((current) => current.map((item) => (item.id === editingTask.id ? updated : item)));
+      setSuccess("Modifications enregistrées.");
+      setEditingTask(null);
+    } catch {
+      try {
+        const latestTasks = await getMyTasks();
+        setTasks(latestTasks);
+      } catch {
+        // Keeps current local list when refresh fails.
+      }
+
+      setError("Impossible d'enregistrer les modifications. Réessaie.");
+      throw new Error("task-update-failed");
+    } finally {
+      setUpdatingTaskIds((current) => current.filter((id) => id !== editingTask.id));
+    }
+  };
+
   const handleToggleDone = async (task: Task, nextDone: boolean) => {
     if (updatingTaskIds.includes(task.id)) {
       return;
@@ -113,8 +162,10 @@ export default function TasksPage() {
     }
   };
 
-  const handleOpenTask = (task: Task) => {
-    setSuccess(`Ouverture de \"${task.title}\" bientot disponible.`);
+  const handleEditTask = (task: Task) => {
+    setError(null);
+    setSuccess(null);
+    setEditingTask(task);
   };
 
   const handleOpenTaskMenu = (task: Task) => {
@@ -204,7 +255,7 @@ export default function TasksPage() {
             setIsAddPanelOpen(true);
           }}
           onToggleDone={handleToggleDone}
-          onOpenTask={handleOpenTask}
+          onEditTask={handleEditTask}
           onOpenTaskMenu={handleOpenTaskMenu}
         />
 
@@ -249,6 +300,38 @@ export default function TasksPage() {
                 categories={categories}
                 categoriesAvailable={categoriesAvailable}
                 onSubmit={handleCreateTask}
+              />
+            </section>
+          </div>
+        )}
+
+        {editingTask && (
+          <div className="task-modal-overlay" role="presentation" onClick={() => setEditingTask(null)}>
+            <section
+              className="task-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Éditer une tâche"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="task-modal-header">
+                <h2>Éditer la tâche</h2>
+                <button type="button" onClick={() => setEditingTask(null)}>
+                  Fermer
+                </button>
+              </div>
+
+              <TaskForm
+                mode="edit"
+                initialValues={{
+                  title: editingTask.title,
+                  notes: editingTask.notes,
+                  categoryId: editingTask.category_id,
+                  dueDate: toDateInputValue(editingTask.due_at),
+                }}
+                categories={categories}
+                categoriesAvailable={categoriesAvailable}
+                onSubmit={handleUpdateTask}
               />
             </section>
           </div>

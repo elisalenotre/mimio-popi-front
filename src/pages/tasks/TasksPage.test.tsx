@@ -3,11 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getMyTasksMock, getMyTaskCategoriesMock, createTaskMock, setTaskDoneStateMock } = vi.hoisted(() => ({
+const { getMyTasksMock, getMyTaskCategoriesMock, createTaskMock, setTaskDoneStateMock, updateTaskMock } = vi.hoisted(() => ({
   getMyTasksMock: vi.fn(),
   getMyTaskCategoriesMock: vi.fn(),
   createTaskMock: vi.fn(),
   setTaskDoneStateMock: vi.fn(),
+  updateTaskMock: vi.fn(),
 }));
 
 vi.mock("../../services/task/taskService", () => ({
@@ -15,6 +16,7 @@ vi.mock("../../services/task/taskService", () => ({
   getMyTaskCategories: getMyTaskCategoriesMock,
   createTask: createTaskMock,
   setTaskDoneState: setTaskDoneStateMock,
+  updateTask: updateTaskMock,
 }));
 
 import TasksPage from "./TasksPage";
@@ -38,6 +40,156 @@ describe("TasksPage", () => {
       created_at: "2026-03-16",
       category: null,
     }));
+
+    updateTaskMock.mockImplementation(async (taskId: string, payload: { title: string; notes?: string | null; categoryId: string | null; dueDate: string | null }) => ({
+      id: taskId,
+      title: payload.title,
+      notes: payload.notes ?? null,
+      due_at: payload.dueDate,
+      is_done: false,
+      category_id: payload.categoryId,
+      created_at: "2026-03-16",
+      category: payload.categoryId ? { id: payload.categoryId, name: "Travail" } : null,
+    }));
+  });
+
+  it("edits task fields and persists updates in the list", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-edit-1",
+        title: "Titre initial",
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+
+    updateTaskMock.mockResolvedValueOnce({
+      id: "t-edit-1",
+      title: "Titre mis a jour",
+      due_at: "2026-03-22",
+      is_done: false,
+      category_id: "c-2",
+      created_at: "2026-03-16",
+      category: { id: "c-2", name: "Travail" },
+    });
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Titre initial");
+
+    await user.click(screen.getByRole("button", { name: "Éditer Titre initial" }));
+
+    const titleInput = screen.getByLabelText("Titre");
+    await user.clear(titleInput);
+    await user.type(titleInput, "  Titre mis a jour  ");
+    await user.selectOptions(screen.getByLabelText("Categorie (optionnel)"), "c-2");
+    await user.type(screen.getByLabelText("Date (optionnel)"), "2026-03-22");
+    await user.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    await waitFor(() => {
+      expect(updateTaskMock).toHaveBeenCalledWith("t-edit-1", {
+        title: "Titre mis a jour",
+        notes: null,
+        categoryId: "c-2",
+        dueDate: "2026-03-22",
+      });
+    });
+
+    expect(await screen.findByText("Titre mis a jour")).toBeInTheDocument();
+    expect(screen.getByText("Modifications enregistrées.")).toBeInTheDocument();
+  });
+
+  it("prevents edit save with blank title", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-edit-2",
+        title: "A garder",
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("A garder");
+
+    await user.click(screen.getByRole("button", { name: "Éditer A garder" }));
+    const titleInput = screen.getByLabelText("Titre");
+    await user.clear(titleInput);
+    await user.type(titleInput, "   ");
+    await user.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    expect(updateTaskMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent("Le titre ne peut pas être vide.");
+  });
+
+  it("keeps edit form values and refreshes tasks when save fails", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-edit-3",
+        title: "Version locale",
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-edit-3",
+        title: "Version distante",
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+
+    updateTaskMock.mockRejectedValueOnce(new Error("conflict"));
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Version locale");
+
+    await user.click(screen.getByRole("button", { name: "Éditer Version locale" }));
+    const titleInput = screen.getByLabelText("Titre");
+    await user.clear(titleInput);
+    await user.type(titleInput, "Nouvelle tentative");
+    await user.click(screen.getByRole("button", { name: "Enregistrer" }));
+
+    await waitFor(() => {
+      expect(getMyTasksMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(await screen.findByText("Version distante")).toBeInTheDocument();
+    expect(screen.getAllByText("Impossible d'enregistrer les modifications. Réessaie.").length).toBeGreaterThan(0);
+    expect(titleInput).toHaveValue("Nouvelle tentative");
   });
 
   it("creates a minimal task with title only", async () => {
@@ -129,7 +281,7 @@ describe("TasksPage", () => {
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
     expect(createTaskMock).not.toHaveBeenCalled();
-    expect(screen.getAllByRole("alert")[0]).toHaveTextContent("Ajoute un titre pour creer ta tâche.");
+    expect(screen.getAllByRole("alert")[0]).toHaveTextContent("Le titre ne peut pas être vide.");
   });
 
   it("keeps form content and shows save error on api failure", async () => {

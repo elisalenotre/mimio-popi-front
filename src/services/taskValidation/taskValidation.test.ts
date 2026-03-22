@@ -29,7 +29,7 @@ describe("isValidTaskTitle", () => {
 
 describe("getTaskTitleError", () => {
   it("returns required title error for blank input", () => {
-    expect(getTaskTitleError("    ")).toBe("Ajoute un titre pour creer ta tâche.");
+    expect(getTaskTitleError("    ")).toBe("Le titre ne peut pas être vide.");
   });
 
   it("returns null for valid title", () => {
