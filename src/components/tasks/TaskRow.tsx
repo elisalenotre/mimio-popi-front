@@ -4,7 +4,7 @@ type TaskRowProps = {
   task: Task;
   isUpdating: boolean;
   onToggleDone: (task: Task, nextDone: boolean) => void;
-  onOpenTask?: (task: Task) => void;
+  onEditTask?: (task: Task) => void;
   onOpenTaskMenu?: (task: Task) => void;
 };
 
@@ -40,7 +40,7 @@ function getRelativeDueLabel(dateIso: string | null) {
   return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(dueDate);
 }
 
-export function TaskRow({ task, isUpdating, onToggleDone, onOpenTask, onOpenTaskMenu }: TaskRowProps) {
+export function TaskRow({ task, isUpdating, onToggleDone, onEditTask, onOpenTaskMenu }: TaskRowProps) {
   const dueLabel = getRelativeDueLabel(task.due_at);
 
   return (
@@ -65,8 +65,8 @@ export function TaskRow({ task, isUpdating, onToggleDone, onOpenTask, onOpenTask
       </div>
 
       <div className="task-row__actions">
-        <button type="button" onClick={() => onOpenTask?.(task)} disabled={isUpdating} aria-label={`Ouvrir ${task.title}`}>
-          Ouvrir
+        <button type="button" onClick={() => onEditTask?.(task)} disabled={isUpdating} aria-label={`Éditer ${task.title}`}>
+          Éditer
         </button>
         <button
           type="button"

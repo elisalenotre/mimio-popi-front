@@ -49,7 +49,7 @@ vi.mock("../../lib/supabaseClient", () => ({
   },
 }));
 
-import { createTask, getMyTaskCategories, getMyTasks, setTaskDoneState } from "./taskService";
+import { createTask, getMyTaskCategories, getMyTasks, setTaskDoneState, updateTask } from "./taskService";
 
 describe("taskService", () => {
   beforeEach(() => {
@@ -121,6 +121,7 @@ describe("taskService", () => {
         {
           id: "t-1",
           title: "Payer facture",
+          notes: null,
           due_at: null,
           is_done: false,
           category_id: "c-2",
@@ -147,6 +148,7 @@ describe("taskService", () => {
       {
         id: "t-1",
         title: "Payer facture",
+        notes: null,
         due_at: null,
         is_done: false,
         category_id: "c-2",
@@ -161,6 +163,7 @@ describe("taskService", () => {
       data: {
         id: "t-2",
         title: "Payer facture",
+        notes: null,
         due_at: null,
         is_done: false,
         category_id: null,
@@ -174,6 +177,7 @@ describe("taskService", () => {
     expect(tasksInsertMock).toHaveBeenCalledWith({
       user_id: "user-1",
       title: "Payer facture",
+      notes: null,
       category_id: null,
       due_at: null,
       is_done: false,
@@ -182,6 +186,7 @@ describe("taskService", () => {
     expect(result).toEqual({
       id: "t-2",
       title: "Payer facture",
+      notes: null,
       due_at: null,
       is_done: false,
       category_id: null,
@@ -195,6 +200,7 @@ describe("taskService", () => {
       data: {
         id: "t-3",
         title: "Reviser",
+        notes: null,
         due_at: "2026-03-17",
         is_done: false,
         category_id: "c-3",
@@ -222,6 +228,7 @@ describe("taskService", () => {
       data: {
         id: "t-1",
         title: "Payer facture",
+        notes: null,
         due_at: "2026-03-17",
         is_done: true,
         category_id: "c-2",
@@ -242,5 +249,42 @@ describe("taskService", () => {
     expect(tasksUpdateEqUserMock).toHaveBeenCalledWith("user_id", "user-1");
     expect(result.is_done).toBe(true);
     expect(result.category).toEqual({ id: "c-2", name: "Travail" });
+  });
+
+  it("updateTask updates editable fields without changing done state", async () => {
+    tasksUpdateSingleMock.mockResolvedValueOnce({
+      data: {
+        id: "t-5",
+        title: "Titre modifie",
+        notes: "Notes modifiees",
+        due_at: null,
+        is_done: true,
+        category_id: null,
+        created_at: "2026-03-16",
+      },
+      error: null,
+    });
+
+    categoriesOrderMock.mockResolvedValueOnce({
+      data: [],
+      error: null,
+    });
+
+    const result = await updateTask("t-5", {
+      title: "  Titre modifie  ",
+      notes: "  Notes modifiees  ",
+      categoryId: null,
+      dueDate: null,
+    });
+
+    expect(tasksUpdateMock).toHaveBeenCalledWith({
+      title: "Titre modifie",
+      notes: "Notes modifiees",
+      category_id: null,
+      due_at: null,
+    });
+    expect(tasksUpdateEqIdMock).toHaveBeenCalledWith("id", "t-5");
+    expect(tasksUpdateEqUserMock).toHaveBeenCalledWith("user_id", "user-1");
+    expect(result.is_done).toBe(true);
   });
 });

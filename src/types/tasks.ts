@@ -6,6 +6,7 @@ export type TaskCategory = {
 export type Task = {
   id: string;
   title: string;
+  notes?: string | null;
   due_at: string | null;
   is_done: boolean;
   category_id: string | null;
@@ -15,6 +16,14 @@ export type Task = {
 
 export type CreateTaskInput = {
   title: string;
+  notes?: string | null;
+  categoryId?: string | null;
+  dueDate?: string | null;
+};
+
+export type UpdateTaskInput = {
+  title?: string;
+  notes?: string | null;
   categoryId?: string | null;
   dueDate?: string | null;
 };

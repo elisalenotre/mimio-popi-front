@@ -1,10 +1,11 @@
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeTaskTitle } from "../taskValidation/taskValidation";
-import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
+import type { CreateTaskInput, Task, TaskCategory, UpdateTaskInput } from "../../types/tasks";
 
 type TaskRow = {
   id: string;
   title: string;
+  notes?: string | null;
   due_at: string | null;
   is_done: boolean;
   category_id: string | null;
@@ -66,7 +67,7 @@ export async function getMyTasks() {
 
   const { data, error } = await supabase
     .from("tasks")
-    .select("id, title, due_at, is_done, category_id, created_at")
+    .select("id, title, notes, due_at, is_done, category_id, created_at")
     .eq("user_id", userId)
     .order("is_done", { ascending: true })
     .order("due_at", { ascending: true, nullsFirst: false })
@@ -92,7 +93,7 @@ export async function setTaskDoneState(taskId: string, isDone: boolean) {
     .update({ is_done: isDone })
     .eq("id", taskId)
     .eq("user_id", userId)
-    .select("id, title, due_at, is_done, category_id, created_at")
+    .select("id, title, notes, due_at, is_done, category_id, created_at")
     .single();
 
   if (error) throw error;
@@ -111,6 +112,7 @@ export async function createTask(input: CreateTaskInput) {
   const userId = await getCurrentUserId();
 
   const title = normalizeTaskTitle(input.title);
+  const notes = input.notes ? input.notes.trim() : null;
   const categoryId = input.categoryId ?? null;
   const dueDate = input.dueDate ?? null;
 
@@ -119,11 +121,12 @@ export async function createTask(input: CreateTaskInput) {
     .insert({
       user_id: userId,
       title,
+        notes,
       category_id: categoryId,
       due_at: dueDate,
       is_done: false,
     })
-    .select("id, title, due_at, is_done, category_id, created_at")
+    .select("id, title, notes, due_at, is_done, category_id, created_at")
     .single();
 
   if (error) throw error;
@@ -143,4 +146,45 @@ export async function createTask(input: CreateTaskInput) {
     ...row,
     category,
   } as Task;
+}
+
+export async function updateTask(taskId: string, input: UpdateTaskInput) {
+  const userId = await getCurrentUserId();
+
+  const updates: Record<string, string | null> = {};
+
+  if (input.title !== undefined) {
+    updates.title = normalizeTaskTitle(input.title);
+  }
+
+  if (input.notes !== undefined) {
+    updates.notes = input.notes ? input.notes.trim() : null;
+  }
+
+  if (input.categoryId !== undefined) {
+    updates.category_id = input.categoryId;
+  }
+
+  if (input.dueDate !== undefined) {
+    updates.due_at = input.dueDate;
+  }
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .update(updates)
+    .eq("id", taskId)
+    .eq("user_id", userId)
+    .select("id, title, notes, due_at, is_done, category_id, created_at")
+    .single();
+
+  if (error) throw error;
+
+  let categoriesById = new Map<string, TaskCategory>();
+  try {
+    categoriesById = await fetchCategoriesMap(userId);
+  } catch {
+    categoriesById = new Map<string, TaskCategory>();
+  }
+
+  return toTask(data as TaskRow, categoriesById);
 }

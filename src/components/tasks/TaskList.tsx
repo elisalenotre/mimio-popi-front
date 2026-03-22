@@ -8,7 +8,7 @@ type TaskListProps = {
   updatingTaskIds?: string[];
   onAddTask: () => void;
   onToggleDone: (task: Task, nextDone: boolean) => void;
-  onOpenTask?: (task: Task) => void;
+  onEditTask?: (task: Task) => void;
   onOpenTaskMenu?: (task: Task) => void;
 };
 
@@ -44,7 +44,7 @@ export function TaskList({
   updatingTaskIds = [],
   onAddTask,
   onToggleDone,
-  onOpenTask,
+  onEditTask,
   onOpenTaskMenu,
 }: TaskListProps) {
   const [showDoneTasks, setShowDoneTasks] = useState(true);
@@ -90,7 +90,7 @@ export function TaskList({
                   task={task}
                   isUpdating={updatingTaskIds.includes(task.id)}
                   onToggleDone={onToggleDone}
-                  onOpenTask={onOpenTask}
+                  onEditTask={onEditTask}
                   onOpenTaskMenu={onOpenTaskMenu}
                 />
               ))}
@@ -126,7 +126,7 @@ export function TaskList({
                     task={task}
                     isUpdating={updatingTaskIds.includes(task.id)}
                     onToggleDone={onToggleDone}
-                    onOpenTask={onOpenTask}
+                    onEditTask={onEditTask}
                     onOpenTaskMenu={onOpenTaskMenu}
                   />
                 ))}
