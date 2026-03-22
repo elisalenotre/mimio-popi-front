@@ -5,7 +5,7 @@ import "./TaskList.css";
 
 type TaskListProps = {
   tasks: Task[];
-  updatingTaskId?: string | null;
+  updatingTaskIds?: string[];
   onAddTask: () => void;
   onToggleDone: (task: Task, nextDone: boolean) => void;
   onOpenTask?: (task: Task) => void;
@@ -41,7 +41,7 @@ function sortTodoTasks(a: Task, b: Task) {
 
 export function TaskList({
   tasks,
-  updatingTaskId = null,
+  updatingTaskIds = [],
   onAddTask,
   onToggleDone,
   onOpenTask,
@@ -88,7 +88,7 @@ export function TaskList({
                 <TaskRow
                   key={task.id}
                   task={task}
-                  isUpdating={updatingTaskId === task.id}
+                  isUpdating={updatingTaskIds.includes(task.id)}
                   onToggleDone={onToggleDone}
                   onOpenTask={onOpenTask}
                   onOpenTaskMenu={onOpenTaskMenu}
@@ -124,7 +124,7 @@ export function TaskList({
                   <TaskRow
                     key={task.id}
                     task={task}
-                    isUpdating={updatingTaskId === task.id}
+                    isUpdating={updatingTaskIds.includes(task.id)}
                     onToggleDone={onToggleDone}
                     onOpenTask={onOpenTask}
                     onOpenTaskMenu={onOpenTaskMenu}
