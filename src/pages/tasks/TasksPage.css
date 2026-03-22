@@ -1,3 +1,74 @@
+.tasks-loader {
+  margin-top: 0.9rem;
+  padding: 1rem;
+  border: 2px dashed rgba(46, 47, 47, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.tasks-error-state {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  border: 2px solid rgba(247, 108, 94, 0.58);
+  border-radius: 10px;
+  background: rgba(247, 108, 94, 0.16);
+  padding: 0.85rem;
+}
+
+.tasks-page-layout {
+  width: min(1240px, 97vw);
+  display: grid;
+  gap: 1rem;
+  padding: 1.4rem 1.5rem 1.7rem;
+  border: 2px solid rgba(46, 47, 47, 0.7);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 229, 0.84) 0%, rgba(244, 251, 255, 0.62) 100%);
+  box-shadow:
+    8px 8px 0 rgba(46, 47, 47, 0.2),
+    0 16px 28px rgba(46, 47, 47, 0.12);
+}
+
+.tasks-page-header,
+.tasks-page-main {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: none;
+}
+
+.tasks-page-header p {
+  margin-bottom: 0;
+}
+
+.tasks-page-status {
+  border: 2px dashed rgba(46, 47, 47, 0.25);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.35);
+  padding: 0.8rem;
+  align-self: start;
+}
+
+.tasks-page-status h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.tasks-page-status p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.tasks-main-title {
+  margin: 0 0 0.8rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 2px dotted rgba(46, 47, 47, 0.25);
+}
+
 .tasks-mascot-wrap {
   width: fit-content;
   margin: 0;
@@ -116,6 +187,11 @@
   margin-bottom: 0;
 }
 
+.task-delete-confirm-actions {
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
 .task-clock,
 .task-clock-toggle {
   position: fixed;
@@ -202,6 +278,11 @@
 }
 
 @media (max-width: 640px) {
+  .tasks-page-layout {
+    padding: 1rem 0.9rem 1.2rem;
+    border-radius: 14px;
+  }
+
   .tasks-mascot-wrap {
     right: 10px;
     bottom: 10px;
@@ -242,5 +323,29 @@
 
   .task-clock__time {
     font-size: 0.94rem;
+  }
+}
+
+@media (min-width: 980px) {
+  .tasks-page-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    align-items: start;
+  }
+
+  .tasks-page-header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .tasks-page-status {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    position: sticky;
+    top: 96px;
+  }
+
+  .tasks-page-main {
+    grid-column: 1;
+    grid-row: 2;
   }
 }

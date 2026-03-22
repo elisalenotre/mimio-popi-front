@@ -1,42 +1,140 @@
+import { useMemo, useState } from "react";
 import type { Task } from "../../types/tasks";
+import { TaskRow } from "./TaskRow";
+import "./TaskList.css";
 
 type TaskListProps = {
   tasks: Task[];
+  updatingTaskIds?: string[];
+  onAddTask: () => void;
+  onToggleDone: (task: Task, nextDone: boolean) => void;
+  onEditTask?: (task: Task) => void;
+  onDeleteTask?: (task: Task) => void;
 };
 
-function formatDueDate(dateIso: string | null) {
-  if (!dateIso) return "Sans date";
+function getSortableDueTime(dateIso: string | null) {
+  if (!dateIso) return Number.POSITIVE_INFINITY;
 
   const raw = dateIso.trim();
-  if (!raw) return "Sans date";
+  if (!raw) return Number.POSITIVE_INFINITY;
 
   const parsedValue = raw.includes("T") ? raw : `${raw}T00:00:00`;
   const date = new Date(parsedValue);
 
   if (Number.isNaN(date.getTime())) {
-    return "Sans date";
+    return Number.POSITIVE_INFINITY;
   }
 
-  return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium",
-  }).format(date);
+  return date.getTime();
 }
 
-export function TaskList({ tasks }: TaskListProps) {
+function sortTodoTasks(a: Task, b: Task) {
+  const dueA = getSortableDueTime(a.due_at);
+  const dueB = getSortableDueTime(b.due_at);
+
+  if (dueA !== dueB) {
+    return dueA - dueB;
+  }
+
+  return b.created_at.localeCompare(a.created_at);
+}
+
+export function TaskList({
+  tasks,
+  updatingTaskIds = [],
+  onAddTask,
+  onToggleDone,
+  onEditTask,
+  onDeleteTask,
+}: TaskListProps) {
+  const [showDoneTasks, setShowDoneTasks] = useState(true);
+
+  const { todoTasks, doneTasks } = useMemo(() => {
+    const todos = tasks.filter((task) => !task.is_done).sort(sortTodoTasks);
+    const done = tasks.filter((task) => task.is_done).sort((a, b) => b.created_at.localeCompare(a.created_at));
+    return {
+      todoTasks: todos,
+      doneTasks: done,
+    };
+  }, [tasks]);
+
   if (tasks.length === 0) {
-    return <p>Aucune tâche pour le moment.</p>;
+    return (
+      <div className="task-list-wrap task-list-empty" role="status" aria-live="polite">
+        <p>Popi ne voit aucune tâche pour le moment.</p>
+        <button type="button" onClick={onAddTask}>
+          Ajouter une tâche
+        </button>
+      </div>
+    );
   }
 
   return (
-    <ul aria-label="Liste des tâches">
-      {tasks.map((task) => (
-        <li key={task.id}>
-          <strong>{task.title}</strong>
-          <p>{task.category?.name ?? "Aucune categorie"}</p>
-          <p>{formatDueDate(task.due_at)}</p>
-          {!task.is_done && <p>Statut: a faire</p>}
-        </li>
-      ))}
-    </ul>
+    <div className="task-list-wrap" aria-label="Liste des tâches">
+      {todoTasks.length === 0 && <p className="task-list-feedback">Bravo, Mimio et Popi célèbrent: tout est fait !</p>}
+
+      <div className="task-list-sections">
+        <section className="task-list-section" aria-label="Tâches à faire">
+          <div className="task-list-section__head">
+            <h3>A faire</h3>
+            <span className="task-list-count">{todoTasks.length}</span>
+          </div>
+
+          {todoTasks.length === 0 ? (
+            <p>Popi dit: aucune tâche à faire.</p>
+          ) : (
+            <ul className="task-list">
+              {todoTasks.map((task) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  isUpdating={updatingTaskIds.includes(task.id)}
+                  onToggleDone={onToggleDone}
+                  onEditTask={onEditTask}
+                  onDeleteTask={onDeleteTask}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="task-list-section" aria-label="Tâches faites">
+          <div className="task-list-section__head">
+            <h3>Faites</h3>
+            <span className="task-list-count">{doneTasks.length}</span>
+          </div>
+
+          {doneTasks.length > 0 && (
+            <button
+              type="button"
+              className="task-list-section__toggle"
+              onClick={() => setShowDoneTasks((current) => !current)}
+              aria-expanded={showDoneTasks}
+            >
+              {showDoneTasks ? "Masquer les tâches faites" : "Afficher les tâches faites"}
+            </button>
+          )}
+
+          {doneTasks.length === 0 ? (
+            <p>Popi attend encore la première tâche faite.</p>
+          ) : (
+            showDoneTasks && (
+              <ul className="task-list">
+                {doneTasks.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    isUpdating={updatingTaskIds.includes(task.id)}
+                    onToggleDone={onToggleDone}
+                    onEditTask={onEditTask}
+                    onDeleteTask={onDeleteTask}
+                  />
+                ))}
+              </ul>
+            )
+          )}
+        </section>
+      </div>
+    </div>
   );
 }

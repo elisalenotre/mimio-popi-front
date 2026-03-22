@@ -11,7 +11,7 @@ export function isValidTaskTitle(title: string) {
 export function getTaskTitleError(title: string) {
   const normalized = normalizeTaskTitle(title);
   if (!isValidTaskTitle(normalized)) {
-    return "Ajoute un titre pour creer ta tâche.";
+    return "Le titre ne peut pas être vide.";
   }
 
   return null;

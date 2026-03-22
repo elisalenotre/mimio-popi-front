@@ -98,6 +98,7 @@ export default function SignUpPage() {
       </div>
 
       <main>
+        <p className="auth-intro">Mimio et Popi t'aident à t'organiser tes tâches et à prévenir la surcharge mentale. <br /> Inscris toi ou connecte toi pour commencer l'aventure !</p>
         <h2>Créer un compte</h2>
         <p role="note">Après inscription, check tes mails pour confirmer ton compte.</p>
 

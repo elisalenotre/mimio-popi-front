@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { updatePassword } from "../../services/auth/authService";
 import { isStrongPassword } from "../../services/validation/validation";
+import mimioMascot from "../../assets/mimio-ok.svg";
+import popiMascot from "../../assets/popi.svg";
+import "./auth.css";
 
 function readUrlParam(name: string) {
   const searchParams = new URLSearchParams(window.location.search);
@@ -103,19 +106,60 @@ export default function ResetPasswordPage() {
 
   if (tokenError) {
     return (
-      <main>
-        <h1>Nouveau mot de passe</h1>
-        <p role="alert">{tokenError}</p>
-        <p>
-          <Link to="/forgot-password">Demander un nouveau lien</Link>
-        </p>
-      </main>
+      <article className="auth-shell">
+        <div className="retro-brand-wrap">
+          <img className="retro-mascot retro-mascot--left" src={mimioMascot} alt="Mascotte Mimio" />
+          <h1 className="retro-brand" aria-label="Mimio et Popi">
+            <span className="retro-brand__char">M</span>
+            <span className="retro-brand__char">i</span>
+            <span className="retro-brand__char">m</span>
+            <span className="retro-brand__char">i</span>
+            <span className="retro-brand__char">o</span>
+            <span className="retro-brand__char retro-brand__space">&nbsp;</span>
+            <span className="retro-brand__char">&amp;</span>
+            <span className="retro-brand__char retro-brand__space">&nbsp;</span>
+            <span className="retro-brand__char">P</span>
+            <span className="retro-brand__char">o</span>
+            <span className="retro-brand__char">p</span>
+            <span className="retro-brand__char">i</span>
+          </h1>
+          <img className="retro-mascot retro-mascot--right" src={popiMascot} alt="Mascotte Popi" />
+        </div>
+
+        <main>
+          <h2>Nouveau mot de passe</h2>
+          <p role="alert">{tokenError}</p>
+          <p>
+            <Link to="/forgot-password">Demander un nouveau lien</Link>
+          </p>
+        </main>
+      </article>
     );
   }
 
   return (
-    <main>
-      <h1>Nouveau mot de passe</h1>
+    <article className="auth-shell">
+      <div className="retro-brand-wrap">
+        <img className="retro-mascot retro-mascot--left" src={mimioMascot} alt="Mascotte Mimio" />
+        <h1 className="retro-brand" aria-label="Mimio et Popi">
+          <span className="retro-brand__char">M</span>
+          <span className="retro-brand__char">i</span>
+          <span className="retro-brand__char">m</span>
+          <span className="retro-brand__char">i</span>
+          <span className="retro-brand__char">o</span>
+          <span className="retro-brand__char retro-brand__space">&nbsp;</span>
+          <span className="retro-brand__char">&amp;</span>
+          <span className="retro-brand__char retro-brand__space">&nbsp;</span>
+          <span className="retro-brand__char">P</span>
+          <span className="retro-brand__char">o</span>
+          <span className="retro-brand__char">p</span>
+          <span className="retro-brand__char">i</span>
+        </h1>
+        <img className="retro-mascot retro-mascot--right" src={popiMascot} alt="Mascotte Popi" />
+      </div>
+
+      <main>
+        <h2>Nouveau mot de passe</h2>
 
       {error && <p role="alert">{error}</p>}
       {success && <p role="status">{success}</p>}
@@ -153,6 +197,7 @@ export default function ResetPasswordPage() {
       <p>
         <Link to="/login">Retour à la connexion</Link>
       </p>
-    </main>
+      </main>
+    </article>
   );
 }

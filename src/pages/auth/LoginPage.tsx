@@ -78,6 +78,7 @@ export default function LoginPage() {
       </div>
 
       <main>
+        <p className="auth-intro">Mimio et Popi t'aident à t'organiser tes tâches et à prévenir la surcharge mentale. <br /> Inscris toi ou connecte toi pour commencer l'aventure !</p>
         <h2>Se connecter</h2>
         {shouldShowCheckEmailMessage && (
           <p role="status">
