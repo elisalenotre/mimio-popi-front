@@ -187,6 +187,11 @@
   margin-bottom: 0;
 }
 
+.task-delete-confirm-actions {
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
 .task-clock,
 .task-clock-toggle {
   position: fixed;

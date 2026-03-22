@@ -119,7 +119,7 @@
 .task-row__actions {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.25rem;
 }
 
 .task-row__actions button {
@@ -127,8 +127,34 @@
   font-size: 0.8rem;
 }
 
+.task-row__menu-wrap {
+  position: relative;
+}
+
 .task-row__menu {
-  min-width: 40px;
+  min-width: 34px;
+  width: 34px;
+  padding: 0.35rem;
+}
+
+.task-row__menu-panel {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  right: 0;
+  z-index: 3;
+  min-width: 135px;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.35rem;
+  border: 2px solid rgba(46, 47, 47, 0.35);
+  border-radius: 8px;
+  background: #fffffb;
+  box-shadow: 0 8px 16px rgba(46, 47, 47, 0.18);
+}
+
+.task-row__menu-panel button {
+  width: 100%;
+  text-align: left;
 }
 
 .task-row--done {

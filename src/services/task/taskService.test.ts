@@ -16,6 +16,10 @@ const {
   tasksUpdateEqUserMock,
   tasksUpdateSelectMock,
   tasksUpdateSingleMock,
+  tasksDeleteMock,
+  tasksDeleteEqIdMock,
+  tasksDeleteEqUserMock,
+  tasksDeleteSelectMock,
   categoriesSelectMock,
   categoriesEqMock,
   categoriesOrderMock,
@@ -35,6 +39,10 @@ const {
   tasksUpdateEqUserMock: vi.fn(),
   tasksUpdateSelectMock: vi.fn(),
   tasksUpdateSingleMock: vi.fn(),
+  tasksDeleteMock: vi.fn(),
+  tasksDeleteEqIdMock: vi.fn(),
+  tasksDeleteEqUserMock: vi.fn(),
+  tasksDeleteSelectMock: vi.fn(),
   categoriesSelectMock: vi.fn(),
   categoriesEqMock: vi.fn(),
   categoriesOrderMock: vi.fn(),
@@ -49,7 +57,7 @@ vi.mock("../../lib/supabaseClient", () => ({
   },
 }));
 
-import { createTask, getMyTaskCategories, getMyTasks, setTaskDoneState, updateTask } from "./taskService";
+import { createTask, deleteTask, getMyTaskCategories, getMyTasks, setTaskDoneState, updateTask } from "./taskService";
 
 describe("taskService", () => {
   beforeEach(() => {
@@ -68,6 +76,10 @@ describe("taskService", () => {
     tasksUpdateEqUserMock.mockReturnValue({ select: tasksUpdateSelectMock });
     tasksUpdateSelectMock.mockReturnValue({ single: tasksUpdateSingleMock });
 
+    tasksDeleteMock.mockReturnValue({ eq: tasksDeleteEqIdMock });
+    tasksDeleteEqIdMock.mockReturnValue({ eq: tasksDeleteEqUserMock });
+    tasksDeleteEqUserMock.mockReturnValue({ select: tasksDeleteSelectMock });
+
     categoriesSelectMock.mockReturnValue({ eq: categoriesEqMock });
     categoriesEqMock.mockReturnValue({ order: categoriesOrderMock });
 
@@ -77,6 +89,7 @@ describe("taskService", () => {
           select: tasksSelectMock,
           insert: tasksInsertMock,
           update: tasksUpdateMock,
+          delete: tasksDeleteMock,
         };
       }
 
@@ -286,5 +299,30 @@ describe("taskService", () => {
     expect(tasksUpdateEqIdMock).toHaveBeenCalledWith("id", "t-5");
     expect(tasksUpdateEqUserMock).toHaveBeenCalledWith("user_id", "user-1");
     expect(result.is_done).toBe(true);
+  });
+
+  it("deleteTask deletes only current user task", async () => {
+    tasksDeleteSelectMock.mockResolvedValueOnce({
+      data: [{ id: "t-8" }],
+      error: null,
+    });
+
+    const result = await deleteTask("t-8");
+
+    expect(tasksDeleteEqIdMock).toHaveBeenCalledWith("id", "t-8");
+    expect(tasksDeleteEqUserMock).toHaveBeenCalledWith("user_id", "user-1");
+    expect(tasksDeleteSelectMock).toHaveBeenCalledWith("id");
+    expect(result).toBe("deleted");
+  });
+
+  it("deleteTask returns missing when no matching task is found", async () => {
+    tasksDeleteSelectMock.mockResolvedValueOnce({
+      data: [],
+      error: null,
+    });
+
+    const result = await deleteTask("t-404");
+
+    expect(result).toBe("missing");
   });
 });

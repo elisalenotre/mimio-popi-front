@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import type { Task } from "../../types/tasks";
 
 type TaskRowProps = {
@@ -5,7 +6,7 @@ type TaskRowProps = {
   isUpdating: boolean;
   onToggleDone: (task: Task, nextDone: boolean) => void;
   onEditTask?: (task: Task) => void;
-  onOpenTaskMenu?: (task: Task) => void;
+  onDeleteTask?: (task: Task) => void;
 };
 
 function parseDate(dateIso: string) {
@@ -40,8 +41,51 @@ function getRelativeDueLabel(dateIso: string | null) {
   return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(dueDate);
 }
 
-export function TaskRow({ task, isUpdating, onToggleDone, onEditTask, onOpenTaskMenu }: TaskRowProps) {
+export function TaskRow({ task, isUpdating, onToggleDone, onEditTask, onDeleteTask }: TaskRowProps) {
   const dueLabel = getRelativeDueLabel(task.due_at);
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
+  const actionsMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isActionsMenuOpen) {
+      return;
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (!actionsMenuRef.current?.contains(target)) {
+        setIsActionsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isActionsMenuOpen]);
+
+  useEffect(() => {
+    if (!isActionsMenuOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsActionsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isActionsMenuOpen]);
+
+  useEffect(() => {
+    if (isUpdating) {
+      setIsActionsMenuOpen(false);
+    }
+  }, [isUpdating]);
 
   return (
     <li className={`task-row${task.is_done ? " task-row--done" : ""}${isUpdating ? " task-row--updating" : ""}`}>
@@ -65,18 +109,44 @@ export function TaskRow({ task, isUpdating, onToggleDone, onEditTask, onOpenTask
       </div>
 
       <div className="task-row__actions">
-        <button type="button" onClick={() => onEditTask?.(task)} disabled={isUpdating} aria-label={`Éditer ${task.title}`}>
-          Éditer
-        </button>
-        <button
-          type="button"
-          className="task-row__menu"
-          onClick={() => onOpenTaskMenu?.(task)}
-          disabled={isUpdating}
-          aria-label={`Actions pour ${task.title}`}
-        >
-          ...
-        </button>
+        <div className="task-row__menu-wrap" ref={actionsMenuRef}>
+          <button
+            type="button"
+            className="task-row__menu"
+            onClick={() => setIsActionsMenuOpen((current) => !current)}
+            disabled={isUpdating}
+            aria-label={`Actions pour ${task.title}`}
+            aria-expanded={isActionsMenuOpen}
+            aria-haspopup="menu"
+          >
+            ...
+          </button>
+
+          {isActionsMenuOpen && (
+            <div className="task-row__menu-panel" role="menu" aria-label={`Menu actions ${task.title}`}>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setIsActionsMenuOpen(false);
+                  onEditTask?.(task);
+                }}
+              >
+                Éditer
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setIsActionsMenuOpen(false);
+                  onDeleteTask?.(task);
+                }}
+              >
+                Supprimer
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </li>
   );
