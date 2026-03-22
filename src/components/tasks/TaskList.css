@@ -143,6 +143,17 @@
   margin: 0;
 }
 
+@media (min-width: 900px) {
+  .task-list-sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .task-list-section {
+    height: 100%;
+  }
+}
+
 @media (max-width: 640px) {
   .task-row {
     grid-template-columns: auto 1fr;

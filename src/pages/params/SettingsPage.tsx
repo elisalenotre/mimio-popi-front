@@ -114,81 +114,96 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) return <div>Chargement...</div>;
+  if (loading) {
+    return (
+      <>
+        <AppNavbar />
+        <div className="settings-page-layout">
+          <main>
+            <p>Chargement...</p>
+          </main>
+        </div>
+      </>
+    );
+  }
 
   return (
-    <main>
+    <>
       <AppNavbar />
-      <h1>Profil / Paramètres</h1>
-      <p className="settings-back-link">
-        <Link to="/" className="back-home-link">
-          <img className="back-home-link__icon" src={backIcon} alt="" aria-hidden="true" />
-          Retour aux tâches
-        </Link>
-      </p>
-
-      {error && <p role="alert">{error}</p>}
-      {success && <p role="status">{success}</p>}
-
-      <form onSubmit={handleSave}>
-        <fieldset disabled={submitting}>
-          <legend>Identité</legend>
-
-          <label>
-            Pseudo
-            <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-          </label>
-
-          {displayNameError && <p role="alert">{displayNameError}</p>}
-        </fieldset>
-
-        <fieldset disabled className="settings-preferences-disabled" aria-disabled="true">
-          <legend>Préférences</legend>
-
-          <p className="settings-mvp-note" role="note">
-            Cette section sera activée dans une prochaine version.
+      <div className="settings-page-layout">
+        <main>
+          <h1>Profil / Paramètres</h1>
+          <p className="settings-back-link">
+            <Link to="/" className="back-home-link">
+              <img className="back-home-link__icon" src={backIcon} alt="" aria-hidden="true" />
+              Retour aux tâches
+            </Link>
           </p>
 
-          <label>
-            Intensité des messages mascottes
-            <select value={intensity} onChange={(e) => setIntensity(e.target.value as MascotMessageIntensity)}>
-              <option value="discrete">Discret</option>
-              <option value="normal">Normal</option>
-            </select>
-          </label>
+          {error && <p role="alert">{error}</p>}
+          {success && <p role="status">{success}</p>}
 
-          <label>
-            <input
-              type="checkbox"
-              checked={helpTexts}
-              onChange={(e) => setHelpTexts(e.target.checked)}
-            />
-            Activer les textes d’aide
-          </label>
-        </fieldset>
+          <form onSubmit={handleSave}>
+            <fieldset disabled={submitting}>
+              <legend>Identité</legend>
 
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Enregistrement..." : "Enregistrer"}
-        </button>
-      </form>
+              <label>
+                Pseudo
+                <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+              </label>
 
-      <hr />
+              {displayNameError && <p role="alert">{displayNameError}</p>}
+            </fieldset>
 
-      <button type="button" onClick={handleRedoOnboarding} disabled={submitting}>
-        Mettre à jour mes réponses (refaire l’onboarding)
-      </button>
+            <fieldset disabled className="settings-preferences-disabled" aria-disabled="true">
+              <legend>Préférences</legend>
 
-      <hr />
+              <p className="settings-mvp-note" role="note">
+                Cette section sera activée dans une prochaine version.
+              </p>
 
-      <button
-        type="button"
-        className="settings-logout-button"
-        onClick={handleLogout}
-        disabled={submitting}
-      >
-        <img className="settings-logout-icon" src={exitIcon} alt="" aria-hidden="true" />
-        Se déconnecter
-      </button>
-    </main>
+              <label>
+                Intensité des messages mascottes
+                <select value={intensity} onChange={(e) => setIntensity(e.target.value as MascotMessageIntensity)}>
+                  <option value="discrete">Discret</option>
+                  <option value="normal">Normal</option>
+                </select>
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  checked={helpTexts}
+                  onChange={(e) => setHelpTexts(e.target.checked)}
+                />
+                Activer les textes d’aide
+              </label>
+            </fieldset>
+
+            <button type="submit" disabled={submitting}>
+              {submitting ? "Enregistrement..." : "Enregistrer"}
+            </button>
+          </form>
+
+          <hr />
+
+          <button type="button" onClick={handleRedoOnboarding} disabled={submitting}>
+            Mettre à jour mes réponses (refaire l’onboarding)
+          </button>
+
+          <hr />
+
+          <button
+            type="button"
+            className="settings-logout-button"
+            onClick={handleLogout}
+            disabled={submitting}
+          >
+            <img className="settings-logout-icon" src={exitIcon} alt="" aria-hidden="true" />
+            Se déconnecter
+          </button>
+        </main>
+      </div>
+    </>
   );
 }

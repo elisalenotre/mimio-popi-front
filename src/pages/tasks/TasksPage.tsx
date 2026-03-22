@@ -119,59 +119,79 @@ export default function TasksPage() {
 
   if (loading) {
     return (
-      <main>
+      <>
         <AppNavbar />
-        <h1>Mes tâches</h1>
-        <div className="tasks-loader" role="status" aria-live="polite">
-          <p>Chargement de tes tâches...</p>
+        <div className="tasks-page-layout">
+          <section className="tasks-page-header" aria-label="Bloc mes tâches">
+            <h1>Mes tâches</h1>
+            <p>Saisis les choses que tu aimerais accomplir aujourd'hui en cliquant sur le "+" dans la main de Mimio.</p>
+          </section>
+
+          <aside className="tasks-page-status" aria-label="Colonne statut">
+            <h3>Statut</h3>
+            <p>Bientot disponible.</p>
+          </aside>
+
+          <main className="tasks-page-main" aria-label="Bloc liste des tâches">
+            <h2 className="tasks-main-title">Liste des tâches</h2>
+            <div className="tasks-loader" role="status" aria-live="polite">
+              <p>Chargement de tes tâches...</p>
+            </div>
+          </main>
         </div>
-      </main>
+      </>
     );
   }
 
   return (
-    <main>
+    <>
       <AppNavbar />
-      <h1>Mes tâches</h1>
-      <p>Saisis les choses que tu aimerais accomplir aujourd'hui en cliquant sur le "+" dans la main de Mimio.</p>
+      <div className="tasks-page-layout">
+        <section className="tasks-page-header" aria-label="Bloc mes tâches">
+          <h1>Mes tâches</h1>
+          <p>Saisis les choses que tu aimerais accomplir aujourd'hui en cliquant sur le "+" dans la main de Mimio.</p>
+        </section>
 
-      <div className="tasks-mascot-wrap">
-        {showMascotHint && (
-          <p className="task-help-bubble" role="status" aria-live="polite">
-            Pour ajouter une nouvelle tâche, c'est par ici par ici!
-          </p>
-        )}
+        <aside className="tasks-page-status" aria-label="Colonne statut">
+          <h3>Statut</h3>
+          <p>Zone reservee pour les indicateurs a venir.</p>
+        </aside>
 
-        <img className="tasks-mascot" src={happyMascot} alt="Mimio et Popi tres heureux" />
-        <button
-          type="button"
-          className="task-add-mascot-button"
-          aria-label="Ajouter une tâche"
-          onClick={() => {
-            setShowMascotHint(false);
-            setIsAddPanelOpen(true);
-          }}
-        >
-          <img className="task-add-mascot-button__icon" src={plusIcon} alt="" aria-hidden="true" />
-        </button>
-      </div>
+        <main className="tasks-page-main" aria-label="Bloc liste des tâches">
+        <h2 className="tasks-main-title">Liste des tâches</h2>
+        <div className="tasks-mascot-wrap">
+          {showMascotHint && (
+            <p className="task-help-bubble" role="status" aria-live="polite">
+              Pour ajouter une nouvelle tâche, c'est par ici par ici!
+            </p>
+          )}
 
-      {loadingError ? (
-        <div className="tasks-error-state" role="alert">
-          <p>{loadingError}</p>
-          <button type="button" onClick={() => void loadTaskData()}>
-            Réessayer
+          <img className="tasks-mascot" src={happyMascot} alt="Mimio et Popi tres heureux" />
+          <button
+            type="button"
+            className="task-add-mascot-button"
+            aria-label="Ajouter une tâche"
+            onClick={() => {
+              setShowMascotHint(false);
+              setIsAddPanelOpen(true);
+            }}
+          >
+            <img className="task-add-mascot-button__icon" src={plusIcon} alt="" aria-hidden="true" />
           </button>
         </div>
-      ) : null}
 
-      {error && <p role="alert">{error}</p>}
-      {success && <p role="status">{success}</p>}
+        {loadingError ? (
+          <div className="tasks-error-state" role="alert">
+            <p>{loadingError}</p>
+            <button type="button" onClick={() => void loadTaskData()}>
+              Réessayer
+            </button>
+          </div>
+        ) : null}
 
-      <hr />
+        {error && <p role="alert">{error}</p>}
+        {success && <p role="status">{success}</p>}
 
-      <section>
-        <h2>Liste</h2>
         <TaskList
           tasks={tasks}
           updatingTaskId={updatingTaskId}
@@ -183,53 +203,54 @@ export default function TasksPage() {
           onOpenTask={handleOpenTask}
           onOpenTaskMenu={handleOpenTaskMenu}
         />
-      </section>
 
-      {isClockVisible ? (
-        <button
-          type="button"
-          className="task-clock"
-          aria-label="Masquer le jour et l'heure"
-          onClick={() => setIsClockVisible(false)}
-        >
-          <span className="task-clock__day">{dayLabel}</span>
-          <span className="task-clock__time">{timeLabel}</span>
-        </button>
-      ) : (
-        <button
-          type="button"
-          className="task-clock-toggle"
-          aria-label="Afficher le jour et l'heure"
-          onClick={() => setIsClockVisible(true)}
-        >
-          Heure
-        </button>
-      )}
-
-      {isAddPanelOpen && (
-        <div className="task-modal-overlay" role="presentation" onClick={() => setIsAddPanelOpen(false)}>
-          <section
-            className="task-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Ajouter une tâche"
-            onClick={(event) => event.stopPropagation()}
+        {isClockVisible ? (
+          <button
+            type="button"
+            className="task-clock"
+            aria-label="Masquer le jour et l'heure"
+            onClick={() => setIsClockVisible(false)}
           >
-            <div className="task-modal-header">
-              <h2>Ajouter une tâche</h2>
-              <button type="button" onClick={() => setIsAddPanelOpen(false)}>
-                Fermer
-              </button>
-            </div>
+            <span className="task-clock__day">{dayLabel}</span>
+            <span className="task-clock__time">{timeLabel}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="task-clock-toggle"
+            aria-label="Afficher le jour et l'heure"
+            onClick={() => setIsClockVisible(true)}
+          >
+            Heure
+          </button>
+        )}
 
-            <TaskForm
-              categories={categories}
-              categoriesAvailable={categoriesAvailable}
-              onSubmit={handleCreateTask}
-            />
-          </section>
-        </div>
-      )}
-    </main>
+        {isAddPanelOpen && (
+          <div className="task-modal-overlay" role="presentation" onClick={() => setIsAddPanelOpen(false)}>
+            <section
+              className="task-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Ajouter une tâche"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="task-modal-header">
+                <h2>Ajouter une tâche</h2>
+                <button type="button" onClick={() => setIsAddPanelOpen(false)}>
+                  Fermer
+                </button>
+              </div>
+
+              <TaskForm
+                categories={categories}
+                categoriesAvailable={categoriesAvailable}
+                onSubmit={handleCreateTask}
+              />
+            </section>
+          </div>
+        )}
+        </main>
+      </div>
+    </>
   );
 }

@@ -65,9 +65,9 @@ body {
 }
 
 
-main,
+/* main,
 #root > div {
-  width: min(760px, 94vw);
+  /* width: min(760px, 94vw);
   background:
     linear-gradient(180deg, rgba(255, 255, 229, 0.98) 0%, rgba(186, 222, 252, 0.24) 100%);
   border: 2px solid var(--ink);
@@ -77,8 +77,8 @@ main,
     8px 8px 0 var(--paper-shadow),
     0 14px 24px var(--soft-shadow);
   position: relative;
-  animation: paper-in 420ms ease-out;
-}
+  animation: paper-in 420ms ease-out; */
+/* } */
 
 h1,
 h2,
@@ -264,13 +264,13 @@ section {
     padding: 1rem 0.75rem 1.25rem;
   }
 
-  main,
+  /* main,
   #root > div {
     padding: 1.3rem 1.05rem 1.45rem;
     border-radius: 12px;
     box-shadow:
       5px 5px 0 var(--paper-shadow),
       0 10px 16px var(--soft-shadow);
-  }
+  } */
 
 }
