@@ -3,12 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getMyTasksMock, getMyTaskCategoriesMock, createTaskMock, setTaskDoneStateMock, updateTaskMock } = vi.hoisted(() => ({
+const { getMyTasksMock, getMyTaskCategoriesMock, createTaskMock, setTaskDoneStateMock, updateTaskMock, deleteTaskMock } = vi.hoisted(() => ({
   getMyTasksMock: vi.fn(),
   getMyTaskCategoriesMock: vi.fn(),
   createTaskMock: vi.fn(),
   setTaskDoneStateMock: vi.fn(),
   updateTaskMock: vi.fn(),
+  deleteTaskMock: vi.fn(),
 }));
 
 vi.mock("../../services/task/taskService", () => ({
@@ -17,6 +18,7 @@ vi.mock("../../services/task/taskService", () => ({
   createTask: createTaskMock,
   setTaskDoneState: setTaskDoneStateMock,
   updateTask: updateTaskMock,
+  deleteTask: deleteTaskMock,
 }));
 
 import TasksPage from "./TasksPage";
@@ -51,6 +53,8 @@ describe("TasksPage", () => {
       created_at: "2026-03-16",
       category: payload.categoryId ? { id: payload.categoryId, name: "Travail" } : null,
     }));
+
+    deleteTaskMock.mockResolvedValue("deleted");
   });
 
   it("edits task fields and persists updates in the list", async () => {
@@ -86,7 +90,8 @@ describe("TasksPage", () => {
 
     await screen.findByText("Titre initial");
 
-    await user.click(screen.getByRole("button", { name: "Éditer Titre initial" }));
+    await user.click(screen.getByRole("button", { name: "Actions pour Titre initial" }));
+    await user.click(screen.getByRole("menuitem", { name: "Éditer" }));
 
     const titleInput = screen.getByLabelText("Titre");
     await user.clear(titleInput);
@@ -131,7 +136,8 @@ describe("TasksPage", () => {
 
     await screen.findByText("A garder");
 
-    await user.click(screen.getByRole("button", { name: "Éditer A garder" }));
+    await user.click(screen.getByRole("button", { name: "Actions pour A garder" }));
+    await user.click(screen.getByRole("menuitem", { name: "Éditer" }));
     const titleInput = screen.getByLabelText("Titre");
     await user.clear(titleInput);
     await user.type(titleInput, "   ");
@@ -177,7 +183,8 @@ describe("TasksPage", () => {
 
     await screen.findByText("Version locale");
 
-    await user.click(screen.getByRole("button", { name: "Éditer Version locale" }));
+    await user.click(screen.getByRole("button", { name: "Actions pour Version locale" }));
+    await user.click(screen.getByRole("menuitem", { name: "Éditer" }));
     const titleInput = screen.getByLabelText("Titre");
     await user.clear(titleInput);
     await user.type(titleInput, "Nouvelle tentative");
@@ -362,6 +369,107 @@ describe("TasksPage", () => {
     await waitFor(() => {
       expect(getMyTasksMock).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it("deletes a task after confirmation and removes it from the list", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-del-1",
+        title: "Tache a supprimer",
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Tache a supprimer");
+
+    await user.click(screen.getByRole("button", { name: "Actions pour Tache a supprimer" }));
+    await user.click(screen.getByRole("menuitem", { name: "Supprimer" }));
+    expect(screen.getByRole("heading", { name: "Supprimer cette tâche ?" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Supprimer" }));
+
+    await waitFor(() => {
+      expect(deleteTaskMock).toHaveBeenCalledWith("t-del-1");
+    });
+
+    expect(screen.queryByText("Tache a supprimer")).not.toBeInTheDocument();
+    expect(screen.getByText("Tâche supprimée.")).toBeInTheDocument();
+  });
+
+  it("keeps task visible when deletion is cancelled", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-del-2",
+        title: "Tache conservee",
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Tache conservee");
+
+    await user.click(screen.getByRole("button", { name: "Actions pour Tache conservee" }));
+    await user.click(screen.getByRole("menuitem", { name: "Supprimer" }));
+    await user.click(screen.getByRole("button", { name: "Annuler" }));
+
+    expect(deleteTaskMock).not.toHaveBeenCalled();
+    expect(screen.getByText("Tache conservee")).toBeInTheDocument();
+  });
+
+  it("shows error and keeps task visible when delete fails", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-del-3",
+        title: "Tache fragile",
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+
+    deleteTaskMock.mockRejectedValueOnce(new Error("network"));
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Tache fragile");
+
+    await user.click(screen.getByRole("button", { name: "Actions pour Tache fragile" }));
+    await user.click(screen.getByRole("menuitem", { name: "Supprimer" }));
+    await user.click(screen.getByRole("button", { name: "Supprimer" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Impossible de supprimer la tâche pour le moment. Réessaie.");
+    expect(screen.getByText("Tache fragile")).toBeInTheDocument();
   });
 
   it("updates done state when checking a task", async () => {

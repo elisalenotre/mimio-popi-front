@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { TaskForm } from "../../components/tasks/TaskForm";
 import { TaskList } from "../../components/tasks/TaskList";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
-import { createTask, getMyTaskCategories, getMyTasks, setTaskDoneState, updateTask } from "../../services/task/taskService";
+import { createTask, deleteTask, getMyTaskCategories, getMyTasks, setTaskDoneState, updateTask } from "../../services/task/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
 import happyMascot from "../../assets/popi-mimio-very-happy.svg";
 import plusIcon from "../../assets/icons/Plus.svg";
@@ -23,8 +23,10 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<TaskCategory[]>([]);
   const [updatingTaskIds, setUpdatingTaskIds] = useState<string[]>([]);
+  const [deletingTaskIds, setDeletingTaskIds] = useState<string[]>([]);
   const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [taskPendingDelete, setTaskPendingDelete] = useState<Task | null>(null);
   const [showMascotHint, setShowMascotHint] = useState(true);
 
   const [categoriesAvailable, setCategoriesAvailable] = useState(true);
@@ -168,8 +170,56 @@ export default function TasksPage() {
     setEditingTask(task);
   };
 
-  const handleOpenTaskMenu = (task: Task) => {
-    setSuccess(`Menu d'actions pour \"${task.title}\" bientot disponible.`);
+  const handleRequestDeleteTask = (task: Task) => {
+    if (deletingTaskIds.includes(task.id)) {
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+    setTaskPendingDelete(task);
+  };
+
+  const handleConfirmDeleteTask = async () => {
+    if (!taskPendingDelete) {
+      return;
+    }
+
+    const taskId = taskPendingDelete.id;
+    if (deletingTaskIds.includes(taskId)) {
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+    setDeletingTaskIds((current) => (current.includes(taskId) ? current : [...current, taskId]));
+
+    try {
+      const deleteResult = await deleteTask(taskId);
+
+      if (deleteResult === "missing") {
+        try {
+          const latestTasks = await getMyTasks();
+          setTasks(latestTasks);
+        } catch {
+          // Keeps current local list when refresh fails.
+        }
+
+        setSuccess("Cette tâche n'existe plus. La liste a été actualisée.");
+      } else {
+        setTasks((current) => current.filter((task) => task.id !== taskId));
+        if (editingTask?.id === taskId) {
+          setEditingTask(null);
+        }
+        setSuccess("Tâche supprimée.");
+      }
+
+      setTaskPendingDelete(null);
+    } catch {
+      setError("Impossible de supprimer la tâche pour le moment. Réessaie.");
+    } finally {
+      setDeletingTaskIds((current) => current.filter((id) => id !== taskId));
+    }
   };
 
   if (loading) {
@@ -249,14 +299,14 @@ export default function TasksPage() {
 
         <TaskList
           tasks={tasks}
-          updatingTaskIds={updatingTaskIds}
+          updatingTaskIds={Array.from(new Set([...updatingTaskIds, ...deletingTaskIds]))}
           onAddTask={() => {
             setShowMascotHint(false);
             setIsAddPanelOpen(true);
           }}
           onToggleDone={handleToggleDone}
           onEditTask={handleEditTask}
-          onOpenTaskMenu={handleOpenTaskMenu}
+          onDeleteTask={handleRequestDeleteTask}
         />
 
         {isClockVisible ? (
@@ -333,6 +383,33 @@ export default function TasksPage() {
                 categoriesAvailable={categoriesAvailable}
                 onSubmit={handleUpdateTask}
               />
+            </section>
+          </div>
+        )}
+
+        {taskPendingDelete && (
+          <div className="task-modal-overlay" role="presentation" onClick={() => setTaskPendingDelete(null)}>
+            <section
+              className="task-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Supprimer cette tâche ?"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="task-modal-header">
+                <h2>Supprimer cette tâche ?</h2>
+              </div>
+
+              <p>Tu es sûr·e ? Cette action est définitive.</p>
+
+              <div className="task-row__actions task-delete-confirm-actions">
+                <button type="button" onClick={() => setTaskPendingDelete(null)} disabled={deletingTaskIds.includes(taskPendingDelete.id)}>
+                  Annuler
+                </button>
+                <button type="button" onClick={() => void handleConfirmDeleteTask()} disabled={deletingTaskIds.includes(taskPendingDelete.id)}>
+                  Supprimer
+                </button>
+              </div>
             </section>
           </div>
         )}

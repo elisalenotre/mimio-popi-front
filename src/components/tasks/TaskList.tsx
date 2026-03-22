@@ -9,7 +9,7 @@ type TaskListProps = {
   onAddTask: () => void;
   onToggleDone: (task: Task, nextDone: boolean) => void;
   onEditTask?: (task: Task) => void;
-  onOpenTaskMenu?: (task: Task) => void;
+  onDeleteTask?: (task: Task) => void;
 };
 
 function getSortableDueTime(dateIso: string | null) {
@@ -45,7 +45,7 @@ export function TaskList({
   onAddTask,
   onToggleDone,
   onEditTask,
-  onOpenTaskMenu,
+  onDeleteTask,
 }: TaskListProps) {
   const [showDoneTasks, setShowDoneTasks] = useState(true);
 
@@ -91,7 +91,7 @@ export function TaskList({
                   isUpdating={updatingTaskIds.includes(task.id)}
                   onToggleDone={onToggleDone}
                   onEditTask={onEditTask}
-                  onOpenTaskMenu={onOpenTaskMenu}
+                  onDeleteTask={onDeleteTask}
                 />
               ))}
             </ul>
@@ -127,7 +127,7 @@ export function TaskList({
                     isUpdating={updatingTaskIds.includes(task.id)}
                     onToggleDone={onToggleDone}
                     onEditTask={onEditTask}
-                    onOpenTaskMenu={onOpenTaskMenu}
+                    onDeleteTask={onDeleteTask}
                   />
                 ))}
               </ul>

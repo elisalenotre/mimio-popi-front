@@ -60,4 +60,21 @@ describe("TaskList", () => {
 
     expect(labels).toEqual(["Date proche", "Date plus loin", "Sans date"]);
   });
+
+  it("closes task actions menu when pressing Escape", async () => {
+    const user = userEvent.setup();
+
+    const tasks: Task[] = [
+      makeTask({ id: "todo-esc", title: "Action clavier" }),
+    ];
+
+    render(<TaskList tasks={tasks} onAddTask={vi.fn()} onToggleDone={vi.fn()} />);
+
+    await user.click(screen.getByRole("button", { name: "Actions pour Action clavier" }));
+    expect(screen.getByRole("menu", { name: "Menu actions Action clavier" })).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("menu", { name: "Menu actions Action clavier" })).not.toBeInTheDocument();
+  });
 });

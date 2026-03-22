@@ -188,3 +188,23 @@ export async function updateTask(taskId: string, input: UpdateTaskInput) {
 
   return toTask(data as TaskRow, categoriesById);
 }
+
+export async function deleteTask(taskId: string) {
+  const userId = await getCurrentUserId();
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .delete()
+    .eq("id", taskId)
+    .eq("user_id", userId)
+    .select("id");
+
+  if (error) throw error;
+
+  const deletedRows = (data ?? []) as Array<{ id: string }>;
+  if (deletedRows.length === 0) {
+    return "missing" as const;
+  }
+
+  return "deleted" as const;
+}
