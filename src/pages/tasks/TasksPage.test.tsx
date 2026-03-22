@@ -250,5 +250,152 @@ describe("TasksPage", () => {
     await waitFor(() => {
       expect(setTaskDoneStateMock).toHaveBeenCalledWith("t-9", true);
     });
+
+    expect(await screen.findByText("Bravo, c'est fait.")).toBeInTheDocument();
+  });
+
+  it("updates done state when unchecking a done task", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-10",
+        title: "Tache deja faite",
+        due_at: "2026-03-17",
+        is_done: true,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+
+    setTaskDoneStateMock.mockResolvedValueOnce({
+      id: "t-10",
+      title: "Tache deja faite",
+      due_at: "2026-03-17",
+      is_done: false,
+      category_id: null,
+      created_at: "2026-03-16",
+      category: null,
+    });
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    const checkbox = await screen.findByRole("checkbox", { name: 'Marquer "Tache deja faite" comme a faire' });
+    expect(checkbox).toBeChecked();
+
+    await user.click(checkbox);
+
+    await waitFor(() => {
+      expect(setTaskDoneStateMock).toHaveBeenCalledWith("t-10", false);
+    });
+
+    expect(await screen.findByText("Tâche remise à faire.")).toBeInTheDocument();
+  });
+
+  it("rolls back checked state and shows error when toggle update fails", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-11",
+        title: "Tache fragile",
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+
+    setTaskDoneStateMock.mockRejectedValueOnce(new Error("network"));
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    const checkbox = await screen.findByRole("checkbox", { name: 'Marquer "Tache fragile" comme faite' });
+    expect(checkbox).not.toBeChecked();
+
+    await user.click(checkbox);
+
+    await waitFor(() => {
+      expect(setTaskDoneStateMock).toHaveBeenCalledWith("t-11", true);
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Impossible de mettre à jour la tâche. Réessaie.");
+
+    await waitFor(() => {
+      expect(screen.getByRole("checkbox", { name: 'Marquer "Tache fragile" comme faite' })).not.toBeChecked();
+    });
+  });
+
+  it("prevents duplicate toggle calls while the task update is pending", async () => {
+    const user = userEvent.setup();
+
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-12",
+        title: "Tache anti spam",
+        due_at: null,
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+    ]);
+
+    let resolveUpdate!: (value: {
+      id: string;
+      title: string;
+      due_at: string | null;
+      is_done: boolean;
+      category_id: string | null;
+      created_at: string;
+      category: null;
+    }) => void;
+
+    setTaskDoneStateMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveUpdate = resolve;
+        })
+    );
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    const checkbox = await screen.findByRole("checkbox", { name: 'Marquer "Tache anti spam" comme faite' });
+
+    await user.click(checkbox);
+    expect(setTaskDoneStateMock).toHaveBeenCalledTimes(1);
+
+    expect(screen.getByRole("checkbox", { name: 'Marquer "Tache anti spam" comme a faire' })).toBeDisabled();
+
+    await user.click(screen.getByRole("checkbox", { name: 'Marquer "Tache anti spam" comme a faire' }));
+    expect(setTaskDoneStateMock).toHaveBeenCalledTimes(1);
+
+    resolveUpdate({
+      id: "t-12",
+      title: "Tache anti spam",
+      due_at: null,
+      is_done: true,
+      category_id: null,
+      created_at: "2026-03-16",
+      category: null,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("checkbox", { name: 'Marquer "Tache anti spam" comme a faire' })).not.toBeDisabled();
+    });
   });
 });

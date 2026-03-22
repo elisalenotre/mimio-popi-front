@@ -13,7 +13,7 @@ export default function TasksPage() {
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<TaskCategory[]>([]);
-  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [updatingTaskIds, setUpdatingTaskIds] = useState<string[]>([]);
   const [isAddPanelOpen, setIsAddPanelOpen] = useState(false);
   const [showMascotHint, setShowMascotHint] = useState(true);
 
@@ -91,21 +91,25 @@ export default function TasksPage() {
   };
 
   const handleToggleDone = async (task: Task, nextDone: boolean) => {
+    if (updatingTaskIds.includes(task.id)) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
-    setUpdatingTaskId(task.id);
+    setUpdatingTaskIds((current) => (current.includes(task.id) ? current : [...current, task.id]));
 
     setTasks((current) => current.map((item) => (item.id === task.id ? { ...item, is_done: nextDone } : item)));
 
     try {
       const updated = await setTaskDoneState(task.id, nextDone);
       setTasks((current) => current.map((item) => (item.id === task.id ? updated : item)));
-      setSuccess(nextDone ? "Tâche marquee comme faite." : "Tâche remise a faire.");
+      setSuccess(nextDone ? "Bravo, c'est fait." : "Tâche remise à faire.");
     } catch {
       setTasks((current) => current.map((item) => (item.id === task.id ? { ...item, is_done: task.is_done } : item)));
-      setError("Impossible de mettre a jour cette tâche pour le moment.");
+      setError("Impossible de mettre à jour la tâche. Réessaie.");
     } finally {
-      setUpdatingTaskId(null);
+      setUpdatingTaskIds((current) => current.filter((id) => id !== task.id));
     }
   };
 
@@ -194,7 +198,7 @@ export default function TasksPage() {
 
         <TaskList
           tasks={tasks}
-          updatingTaskId={updatingTaskId}
+          updatingTaskIds={updatingTaskIds}
           onAddTask={() => {
             setShowMascotHint(false);
             setIsAddPanelOpen(true);
