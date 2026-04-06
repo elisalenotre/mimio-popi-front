@@ -13,6 +13,7 @@ import {
   updateTask,
 } from "../../services/task/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
+import { StatusMiniPanel } from "../../components/statuses/StatusMiniPanel";
 import happyMascot from "../../assets/popi-mimio-very-happy.svg";
 import plusIcon from "../../assets/icons/Plus.svg";
 import "./TasksPage.css";
@@ -293,9 +294,8 @@ export default function TasksPage() {
             <p>Popi et Mimio t'aident à garder le cap: ajoute tes tâches en cliquant sur le "+" dans la main de Mimio.</p>
           </section>
 
-          <aside className="tasks-page-status" aria-label="Colonne statut">
-            <h3>Statut</h3>
-            <p>Popi et Mimio préparent cette zone.</p>
+          <aside className="tasks-page-status" aria-label="Aperçu statuts">
+            <StatusMiniPanel />
           </aside>
 
           <main className="tasks-page-main" aria-label="Bloc liste des tâches">
@@ -318,9 +318,8 @@ export default function TasksPage() {
           <p>Popi et Mimio t'aident à garder le cap: ajoute tes tâches en cliquant sur le "+" dans la main de Mimio.</p>
         </section>
 
-        <aside className="tasks-page-status" aria-label="Colonne statut">
-          <h3>Statut</h3>
-          <p>Popi et Mimio préparent les indicateurs à venir.</p>
+        <aside className="tasks-page-status" aria-label="Aperçu statuts">
+          <StatusMiniPanel />
         </aside>
 
         <main className="tasks-page-main" aria-label="Bloc liste des tâches">
