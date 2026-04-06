@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import heartIcon from "../../assets/icons/Heart.svg";
+import listIcon from "../../assets/icons/List.svg";
 import roomIcon from "../../assets/icons/Home.svg";
 import settingsIcon from "../../assets/icons/Gear.svg";
 import exitIcon from "../../assets/icons/Exit.svg";
@@ -40,6 +42,25 @@ export function AppNavbar() {
       </Link>
 
       <div className="app-navbar__actions">
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) => `app-navbar__icon-link${isActive ? " app-navbar__icon-link--active" : ""}`}
+          aria-label="Aller aux statuts"
+        >
+          <img src={heartIcon} alt="" />
+          <span>Statuts</span>
+        </NavLink>
+
+        <NavLink
+          to="/tasks"
+          className={({ isActive }) => `app-navbar__icon-link${isActive ? " app-navbar__icon-link--active" : ""}`}
+          aria-label="Aller aux tâches"
+        >
+          <img src={listIcon} alt="" />
+          <span>Tâches</span>
+        </NavLink>
+
         <NavLink
           to="/room"
           className={({ isActive }) => `app-navbar__icon-link${isActive ? " app-navbar__icon-link--active" : ""}`}

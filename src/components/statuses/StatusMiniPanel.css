@@ -1,0 +1,128 @@
+.status-mini-panel {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.status-mini-panel__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.status-mini-panel__header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.status-mini-panel__link {
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-mini-panel__error {
+  margin: 0;
+  font-size: 0.86rem;
+  opacity: 0.72;
+}
+
+.status-mini-panel__list {
+  display: grid;
+  gap: 0.52rem;
+}
+
+/* ---- Row ---- */
+.status-mini-row {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.status-mini-row__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.status-mini-row__label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-mini-row__value {
+  font-family: var(--font-title);
+  font-size: 0.88rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-mini-row__bar {
+  overflow: hidden;
+  height: 8px;
+  border: 1.5px solid rgba(46, 47, 47, 0.18);
+  border-radius: 999px;
+  background: rgba(46, 47, 47, 0.07);
+}
+
+.status-mini-row__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 200ms ease-out;
+}
+
+/* ---- Skeleton ---- */
+.status-mini-skeleton {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.status-mini-skeleton__row {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.status-mini-skeleton__label {
+  width: 55%;
+  height: 11px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(46, 47, 47, 0.07) 0%,
+    rgba(46, 47, 47, 0.14) 50%,
+    rgba(46, 47, 47, 0.07) 100%
+  );
+  background-size: 200% 100%;
+  animation: status-mini-skeleton 1.4s ease-in-out infinite;
+}
+
+.status-mini-skeleton__bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(46, 47, 47, 0.07) 0%,
+    rgba(46, 47, 47, 0.14) 50%,
+    rgba(46, 47, 47, 0.07) 100%
+  );
+  background-size: 200% 100%;
+  animation: status-mini-skeleton 1.4s ease-in-out 0.1s infinite;
+}
+
+@keyframes status-mini-skeleton {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-mini-row__bar-fill,
+  .status-mini-skeleton__label,
+  .status-mini-skeleton__bar {
+    animation: none;
+    transition: none;
+  }
+}
