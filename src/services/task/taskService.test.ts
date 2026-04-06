@@ -265,6 +265,32 @@ describe("taskService", () => {
     expect(result.category).toEqual({ id: "c-3", name: "Etudes" });
   });
 
+  it("createTask keeps optional time in due_at", async () => {
+    tasksInsertSingleMock.mockResolvedValueOnce({
+      data: {
+        id: "t-3c",
+        title: "Rendez-vous",
+        notes: null,
+        due_at: "2026-03-17T14:30",
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+      },
+      error: null,
+    });
+
+    await createTask({
+      title: "Rendez-vous",
+      dueDate: "2026-03-17T14:30",
+    });
+
+    expect(tasksInsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        due_at: "2026-03-17T14:30",
+      })
+    );
+  });
+
   it("createTask stores null category when selected category is not owned by user", async () => {
     tasksInsertSingleMock.mockResolvedValueOnce({
       data: {
@@ -296,6 +322,25 @@ describe("taskService", () => {
     );
     expect(result.category_id).toBeNull();
     expect(result.category).toBeNull();
+  });
+
+  it("updateTask keeps optional time in due_at", async () => {
+    tasksUpdateSingleMock.mockResolvedValueOnce({
+      data: {
+        id: "t-6",
+        title: "Titre modifie",
+        notes: null,
+        due_at: "2026-03-18T08:15",
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+      },
+      error: null,
+    });
+
+    await updateTask("t-6", { dueDate: "2026-03-18T08:15" });
+
+    expect(tasksUpdateMock).toHaveBeenCalledWith({ due_at: "2026-03-18T08:15" });
   });
 
   it("setTaskDoneState updates task status for current user", async () => {

@@ -4,9 +4,16 @@ import type { Task } from "../../types/tasks";
 type TaskRowProps = {
   task: Task;
   isUpdating: boolean;
+  isDraggable?: boolean;
+  isDragging?: boolean;
+  isDropTarget?: boolean;
   onToggleDone: (task: Task, nextDone: boolean) => void;
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (task: Task) => void;
+  onDragStart?: () => void;
+  onDragOver?: (event: React.DragEvent<HTMLLIElement>) => void;
+  onDrop?: (event: React.DragEvent<HTMLLIElement>) => void;
+  onDragEnd?: () => void;
 };
 
 function parseDate(dateIso: string) {
@@ -24,10 +31,22 @@ function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
+function hasExplicitTime(dateIso: string) {
+  const separatorIndex = dateIso.indexOf("T");
+  if (separatorIndex < 0) {
+    return false;
+  }
+
+  return /^\d{2}:\d{2}/.test(dateIso.slice(separatorIndex + 1));
+}
+
 function getRelativeDueLabel(dateIso: string | null) {
   if (!dateIso) return "Sans date";
 
-  const dueDate = parseDate(dateIso);
+  const raw = dateIso.trim();
+  if (!raw) return "Sans date";
+
+  const dueDate = parseDate(raw);
   if (!dueDate) return "Sans date";
 
   const today = startOfDay(new Date());
@@ -38,10 +57,34 @@ function getRelativeDueLabel(dateIso: string | null) {
   if (diffDays === 1) return "Demain";
   if (diffDays === -1) return "Hier";
 
-  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(dueDate);
+  const baseLabel = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(dueDate);
+
+  if (!hasExplicitTime(raw)) {
+    return baseLabel;
+  }
+
+  const timeLabel = new Intl.DateTimeFormat("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(dueDate);
+
+  return `${baseLabel} a ${timeLabel}`;
 }
 
-export function TaskRow({ task, isUpdating, onToggleDone, onEditTask, onDeleteTask }: TaskRowProps) {
+export function TaskRow({
+  task,
+  isUpdating,
+  isDraggable = false,
+  isDragging = false,
+  isDropTarget = false,
+  onToggleDone,
+  onEditTask,
+  onDeleteTask,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+}: TaskRowProps) {
   const dueLabel = getRelativeDueLabel(task.due_at);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
@@ -88,7 +131,23 @@ export function TaskRow({ task, isUpdating, onToggleDone, onEditTask, onDeleteTa
   }, [isUpdating]);
 
   return (
-    <li className={`task-row${task.is_done ? " task-row--done" : ""}${isUpdating ? " task-row--updating" : ""}`}>
+    <li
+      className={`task-row${task.is_done ? " task-row--done" : ""}${isUpdating ? " task-row--updating" : ""}${isDraggable ? " task-row--draggable" : ""}${isDragging ? " task-row--dragging" : ""}${isDropTarget ? " task-row--drop-target" : ""}`}
+      draggable={isDraggable && !isUpdating}
+      onDragStart={(event) => {
+        if (!isDraggable || isUpdating) {
+          event.preventDefault();
+          return;
+        }
+
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", task.id);
+        onDragStart?.();
+      }}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+    >
       <label className="task-row__checkbox-wrap">
         <input
           type="checkbox"
@@ -109,6 +168,12 @@ export function TaskRow({ task, isUpdating, onToggleDone, onEditTask, onDeleteTa
       </div>
 
       <div className="task-row__actions">
+        {isDraggable ? (
+          <span className="task-row__drag-handle" aria-hidden="true">
+            ::
+          </span>
+        ) : null}
+
         <div className="task-row__menu-wrap" ref={actionsMenuRef}>
           <button
             type="button"
