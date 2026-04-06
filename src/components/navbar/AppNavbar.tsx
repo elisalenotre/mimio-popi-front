@@ -28,7 +28,7 @@ export function AppNavbar() {
 
   return (
     <nav className="app-navbar" aria-label="Navigation principale">
-      <Link to="/" className="app-navbar__brand" aria-label="Mimio et Popi">
+      <Link to="/tasks" className="app-navbar__brand" aria-label="Mimio et Popi">
         <img className="app-navbar__brand-mascot app-navbar__brand-mascot--left" src={mimioHeadMascot} alt="" />
         {brandChars.map((char, index) => (
           <span
@@ -43,6 +43,15 @@ export function AppNavbar() {
 
       <div className="app-navbar__actions">
         <NavLink
+          to="/tasks"
+          className={({ isActive }) => `app-navbar__icon-link${isActive ? " app-navbar__icon-link--active" : ""}`}
+          aria-label="Aller aux tâches"
+        >
+          <img src={listIcon} alt="" />
+          <span>Tâches</span>
+        </NavLink>
+
+        <NavLink
           to="/"
           end
           className={({ isActive }) => `app-navbar__icon-link${isActive ? " app-navbar__icon-link--active" : ""}`}
@@ -50,15 +59,6 @@ export function AppNavbar() {
         >
           <img src={heartIcon} alt="" />
           <span>Statuts</span>
-        </NavLink>
-
-        <NavLink
-          to="/tasks"
-          className={({ isActive }) => `app-navbar__icon-link${isActive ? " app-navbar__icon-link--active" : ""}`}
-          aria-label="Aller aux tâches"
-        >
-          <img src={listIcon} alt="" />
-          <span>Tâches</span>
         </NavLink>
 
         <NavLink
