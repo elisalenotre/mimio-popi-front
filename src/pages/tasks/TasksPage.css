@@ -187,6 +187,57 @@
   margin-bottom: 0;
 }
 
+.task-impact-estimate {
+  margin: 0.8rem 0;
+  padding: 0.75rem 0.8rem;
+  border: 2px dashed rgba(46, 47, 47, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.task-impact-estimate__title {
+  margin: 0;
+  font-family: var(--font-title);
+}
+
+.task-impact-estimate__subtitle {
+  margin: 0.2rem 0 0.55rem;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.task-impact-estimate__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.task-impact-estimate__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.task-impact-estimate__delta {
+  font-variant-numeric: tabular-nums;
+}
+
+.task-impact-estimate__delta--positive {
+  color: #1d7a2d;
+}
+
+.task-impact-estimate__delta--negative {
+  color: #b7342a;
+}
+
+.task-impact-estimate__delta--neutral {
+  color: #50575f;
+}
+
 .task-delete-confirm-actions {
   margin-top: 1rem;
   justify-content: flex-end;
@@ -323,6 +374,10 @@
 
   .task-clock__time {
     font-size: 0.94rem;
+  }
+
+  .task-impact-estimate__item {
+    font-size: 0.84rem;
   }
 }
 

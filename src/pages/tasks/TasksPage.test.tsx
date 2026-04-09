@@ -181,7 +181,7 @@ describe("TasksPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Popi n'a pas pu préparer tes catégories. Réessaie dans un instant.");
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     await user.type(screen.getByLabelText("Titre"), "Tache sans categorie");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
@@ -338,7 +338,7 @@ describe("TasksPage", () => {
 
     await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     await user.type(screen.getByLabelText("Titre"), "Reviser");
     await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "c-2");
     await user.type(screen.getByLabelText("Date (optionnel)"), "2026-03-17");
@@ -455,7 +455,7 @@ describe("TasksPage", () => {
 
     await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     await user.type(screen.getByLabelText("Titre"), "   ");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
@@ -476,7 +476,7 @@ describe("TasksPage", () => {
 
     await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     const titleInput = screen.getByLabelText("Titre");
     await user.type(titleInput, "Acheter pain");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
@@ -510,7 +510,7 @@ describe("TasksPage", () => {
 
     await screen.findByRole("heading", { name: "Mes tâches" });
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     expect(screen.getByText("Popi n'arrive pas à charger les catégories pour le moment.")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Titre"), "Course rapide");

@@ -12,6 +12,7 @@ function makeTask(overrides: Partial<Task>): Task {
     is_done: false,
     category_id: null,
     created_at: "2026-03-16T10:00:00.000Z",
+    impact: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
     category: null,
     ...overrides,
   };

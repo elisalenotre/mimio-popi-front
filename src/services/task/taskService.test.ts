@@ -168,6 +168,7 @@ describe("taskService", () => {
           is_done: false,
           category_id: "c-2",
           created_at: "2026-03-16",
+          impact: { fatigue: 4, stress: 3, joie: -1, sante: 0, motivation: 2, finances: 1 },
         },
       ],
       error: null,
@@ -195,6 +196,7 @@ describe("taskService", () => {
         is_done: false,
         category_id: "c-2",
         created_at: "2026-03-16",
+        impact: { fatigue: 4, stress: 3, joie: -1, sante: 0, motivation: 2, finances: 1 },
         category: { id: "c-2", name: "Travail" },
       },
     ]);
@@ -210,6 +212,7 @@ describe("taskService", () => {
         is_done: false,
         category_id: null,
         created_at: "2026-03-16",
+        impact: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
       },
       error: null,
     });
@@ -223,6 +226,10 @@ describe("taskService", () => {
       category_id: null,
       due_at: null,
       is_done: false,
+      impact: {
+        version: "v1",
+        deltas: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
+      },
     });
 
     expect(result).toEqual({
@@ -233,6 +240,7 @@ describe("taskService", () => {
       is_done: false,
       category_id: null,
       created_at: "2026-03-16",
+      impact: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
       category: null,
     });
   });
@@ -247,6 +255,7 @@ describe("taskService", () => {
         is_done: false,
         category_id: "c-3",
         created_at: "2026-03-16",
+        impact: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
       },
       error: null,
     });
@@ -275,6 +284,7 @@ describe("taskService", () => {
         is_done: false,
         category_id: null,
         created_at: "2026-03-16",
+        impact: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
       },
       error: null,
     });
@@ -292,10 +302,81 @@ describe("taskService", () => {
     expect(tasksInsertMock).toHaveBeenCalledWith(
       expect.objectContaining({
         category_id: null,
+        impact: {
+          version: "v1",
+          deltas: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
+        },
       })
     );
     expect(result.category_id).toBeNull();
     expect(result.category).toBeNull();
+  });
+
+  it("createTask stores mapped impact for Travail", async () => {
+    tasksInsertSingleMock.mockResolvedValueOnce({
+      data: {
+        id: "t-impact-1",
+        title: "Sprint",
+        notes: null,
+        due_at: null,
+        is_done: false,
+        category_id: "c-travail",
+        created_at: "2026-03-16",
+        impact: { fatigue: 4, stress: 3, joie: -1, sante: 0, motivation: 2, finances: 1 },
+      },
+      error: null,
+    });
+
+    categoriesOrderMock.mockResolvedValueOnce({
+      data: [{ id: "c-travail", name: "Travail" }],
+      error: null,
+    });
+
+    await createTask({ title: "Sprint", categoryId: "c-travail" });
+
+    expect(tasksInsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category_id: "c-travail",
+        impact: {
+          version: "v1",
+          deltas: { fatigue: 4, stress: 3, joie: -1, sante: 0, motivation: 2, finances: 1 },
+        },
+      })
+    );
+  });
+
+  it("normalizes legacy flat impact payload from stored rows", async () => {
+    tasksOrderTertiaryMock.mockResolvedValueOnce({
+      data: [
+        {
+          id: "t-legacy-1",
+          title: "Ancienne tache",
+          notes: null,
+          due_at: null,
+          is_done: false,
+          category_id: null,
+          created_at: "2026-03-16",
+          impact: { fatigue: 1, stress: -1, joie: 2, sante: 0, motivation: 0, finances: -2 },
+        },
+      ],
+      error: null,
+    });
+
+    categoriesOrderMock.mockResolvedValueOnce({
+      data: [],
+      error: null,
+    });
+
+    const result = await getMyTasks();
+
+    expect(result[0]?.impact).toEqual({
+      fatigue: 1,
+      stress: -1,
+      joie: 2,
+      sante: 0,
+      motivation: 0,
+      finances: -2,
+    });
   });
 
   it("setTaskDoneState updates task status for current user", async () => {
@@ -308,6 +389,7 @@ describe("taskService", () => {
         is_done: true,
         category_id: "c-2",
         created_at: "2026-03-16",
+        impact: { fatigue: 4, stress: 3, joie: -1, sante: 0, motivation: 2, finances: 1 },
       },
       error: null,
     });
@@ -336,6 +418,7 @@ describe("taskService", () => {
         is_done: true,
         category_id: null,
         created_at: "2026-03-16",
+        impact: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
       },
       error: null,
     });
@@ -356,6 +439,10 @@ describe("taskService", () => {
       title: "Titre modifie",
       notes: "Notes modifiees",
       category_id: null,
+      impact: {
+        version: "v1",
+        deltas: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
+      },
       due_at: null,
     });
     expect(tasksUpdateEqIdMock).toHaveBeenCalledWith("id", "t-5");
@@ -373,6 +460,7 @@ describe("taskService", () => {
         is_done: false,
         category_id: null,
         created_at: "2026-03-16",
+        impact: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
       },
       error: null,
     });
@@ -388,6 +476,43 @@ describe("taskService", () => {
 
     expect(tasksUpdateMock).toHaveBeenCalledWith({
       category_id: null,
+      impact: {
+        version: "v1",
+        deltas: { fatigue: 0, stress: 0, joie: 0, sante: 0, motivation: 0, finances: 0 },
+      },
+    });
+  });
+
+  it("updateTask updates impact when category changes to Sante", async () => {
+    tasksUpdateSingleMock.mockResolvedValueOnce({
+      data: {
+        id: "t-7",
+        title: "Titre",
+        notes: null,
+        due_at: null,
+        is_done: false,
+        category_id: "c-sante",
+        created_at: "2026-03-16",
+        impact: { fatigue: -2, stress: -1, joie: 1, sante: 3, motivation: 1, finances: 0 },
+      },
+      error: null,
+    });
+
+    categoriesOrderMock.mockResolvedValueOnce({
+      data: [{ id: "c-sante", name: "Santé" }],
+      error: null,
+    });
+
+    await updateTask("t-7", {
+      categoryId: "c-sante",
+    });
+
+    expect(tasksUpdateMock).toHaveBeenCalledWith({
+      category_id: "c-sante",
+      impact: {
+        version: "v1",
+        deltas: { fatigue: -2, stress: -1, joie: 1, sante: 3, motivation: 1, finances: 0 },
+      },
     });
   });
 

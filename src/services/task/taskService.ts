@@ -1,6 +1,8 @@
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeTaskTitle } from "../taskValidation/taskValidation";
+import { normalizeTaskImpact } from "../../types/tasks";
 import type { CreateTaskInput, Task, TaskCategory, UpdateTaskInput } from "../../types/tasks";
+import { estimateVersionedTaskImpactFromCategoryName } from "../taskImpact/taskImpactEstimator";
 
 type TaskRow = {
   id: string;
@@ -10,6 +12,7 @@ type TaskRow = {
   is_done: boolean;
   category_id: string | null;
   created_at: string;
+  impact?: unknown;
 };
 
 type CategoryRow = {
@@ -46,6 +49,7 @@ async function getCurrentUserId() {
 function toTask(row: TaskRow, categoriesById: Map<string, TaskCategory>): Task {
   return {
     ...row,
+    impact: normalizeTaskImpact(row.impact),
     category: row.category_id ? (categoriesById.get(row.category_id) ?? null) : null,
   };
 }
@@ -181,7 +185,7 @@ export async function getMyTasks() {
 
   const { data, error } = await supabase
     .from("tasks")
-    .select("id, title, notes, due_at, is_done, category_id, created_at")
+    .select("id, title, notes, due_at, is_done, category_id, created_at, impact")
     .eq("user_id", userId)
     .order("is_done", { ascending: true })
     .order("due_at", { ascending: true, nullsFirst: false })
@@ -207,7 +211,7 @@ export async function setTaskDoneState(taskId: string, isDone: boolean) {
     .update({ is_done: isDone })
     .eq("id", taskId)
     .eq("user_id", userId)
-    .select("id, title, notes, due_at, is_done, category_id, created_at")
+    .select("id, title, notes, due_at, is_done, category_id, created_at, impact")
     .single();
 
   if (error) throw error;
@@ -239,6 +243,8 @@ export async function createTask(input: CreateTaskInput) {
     categoryId = category?.id ?? null;
   }
 
+  const estimatedImpact = estimateVersionedTaskImpactFromCategoryName(category?.name);
+
   const { data, error } = await supabase
     .from("tasks")
     .insert({
@@ -248,8 +254,9 @@ export async function createTask(input: CreateTaskInput) {
       category_id: categoryId,
       due_at: dueDate,
       is_done: false,
+      impact: estimatedImpact,
     })
-    .select("id, title, notes, due_at, is_done, category_id, created_at")
+    .select("id, title, notes, due_at, is_done, category_id, created_at, impact")
     .single();
 
   if (error) throw error;
@@ -257,6 +264,7 @@ export async function createTask(input: CreateTaskInput) {
   const row = data as TaskRow;
   return {
     ...row,
+    impact: normalizeTaskImpact(row.impact),
     category,
   } as Task;
 }
@@ -264,7 +272,7 @@ export async function createTask(input: CreateTaskInput) {
 export async function updateTask(taskId: string, input: UpdateTaskInput) {
   const userId = await getCurrentUserId();
 
-  const updates: Record<string, string | null> = {};
+  const updates: Record<string, unknown> = {};
 
   if (input.title !== undefined) {
     updates.title = normalizeTaskTitle(input.title);
@@ -277,9 +285,12 @@ export async function updateTask(taskId: string, input: UpdateTaskInput) {
   if (input.categoryId !== undefined) {
     if (input.categoryId) {
       const categoriesById = await fetchCategoriesMap(userId);
-      updates.category_id = categoriesById.has(input.categoryId) ? input.categoryId : null;
+      const category = categoriesById.get(input.categoryId) ?? null;
+      updates.category_id = category?.id ?? null;
+      updates.impact = estimateVersionedTaskImpactFromCategoryName(category?.name);
     } else {
       updates.category_id = null;
+      updates.impact = estimateVersionedTaskImpactFromCategoryName(null);
     }
   }
 
@@ -292,7 +303,7 @@ export async function updateTask(taskId: string, input: UpdateTaskInput) {
     .update(updates)
     .eq("id", taskId)
     .eq("user_id", userId)
-    .select("id, title, notes, due_at, is_done, category_id, created_at")
+    .select("id, title, notes, due_at, is_done, category_id, created_at, impact")
     .single();
 
   if (error) throw error;
