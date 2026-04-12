@@ -39,6 +39,12 @@
   font-size: 1.05rem;
 }
 
+.task-list-section__hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.84rem;
+  opacity: 0.8;
+}
+
 .task-list-count {
   font-size: 0.88rem;
   opacity: 0.8;
@@ -68,6 +74,20 @@
   border: 2px solid rgba(46, 47, 47, 0.2);
   border-radius: 10px;
   background: #fffffb;
+}
+
+.task-row--draggable {
+  cursor: grab;
+}
+
+.task-row--dragging {
+  opacity: 0.45;
+  cursor: grabbing;
+}
+
+.task-row--drop-target {
+  border-color: rgba(31, 109, 152, 0.65);
+  box-shadow: 0 0 0 3px rgba(186, 222, 252, 0.45);
 }
 
 .task-row--updating {
@@ -120,6 +140,16 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+}
+
+.task-row__drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  color: rgba(46, 47, 47, 0.6);
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .task-row__actions button {

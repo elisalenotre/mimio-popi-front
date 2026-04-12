@@ -3,6 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+function getDateOffset(days: number) {
+  const now = new Date();
+  now.setDate(now.getDate() + days);
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 10);
+}
+
 const {
   getMyTasksMock,
   getMyTaskCategoriesMock,
@@ -47,6 +54,7 @@ import TasksPage from "./TasksPage";
 describe("TasksPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     useOptionalAuthMock.mockReturnValue(undefined);
 
     getMyTasksMock.mockResolvedValue([]);
@@ -108,6 +116,7 @@ describe("TasksPage", () => {
 
   it("edits task fields and persists updates in the list", async () => {
     const user = userEvent.setup();
+    const futureDate = getDateOffset(1);
 
     getMyTasksMock.mockResolvedValueOnce([
       {
@@ -145,8 +154,9 @@ describe("TasksPage", () => {
     const titleInput = screen.getByLabelText("Titre");
     await user.clear(titleInput);
     await user.type(titleInput, "  Titre mis a jour  ");
-        await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "c-2");
-    await user.type(screen.getByLabelText("Date (optionnel)"), "2026-03-22");
+    await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "c-2");
+    await user.type(screen.getByLabelText("Date (optionnel)"), futureDate);
+    await user.type(screen.getByLabelText("Heure (optionnel)"), "18:45");
     await user.click(screen.getByRole("button", { name: "Enregistrer" }));
 
     await waitFor(() => {
@@ -154,7 +164,7 @@ describe("TasksPage", () => {
         title: "Titre mis a jour",
         notes: null,
         categoryId: "c-2",
-        dueDate: "2026-03-22",
+        dueDate: `${futureDate}T18:45`,
       });
     });
 
@@ -322,6 +332,7 @@ describe("TasksPage", () => {
 
   it("creates a task with category and date", async () => {
     const user = userEvent.setup();
+    const futureDate = getDateOffset(1);
 
     createTaskMock.mockResolvedValueOnce({
       id: "t-2",
@@ -339,20 +350,121 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole("heading", { name: "Mes tâches" });
+    await screen.findAllByRole("button", { name: "Ajouter une tâche" });
 
     await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     await user.type(screen.getByLabelText("Titre"), "Reviser");
     await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "c-2");
-    await user.type(screen.getByLabelText("Date (optionnel)"), "2026-03-17");
+    await user.type(screen.getByLabelText("Date (optionnel)"), futureDate);
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
     await waitFor(() => {
       expect(createTaskMock).toHaveBeenCalledWith({
         title: "Reviser",
         categoryId: "c-2",
-        dueDate: "2026-03-17",
+        dueDate: futureDate,
       });
+    });
+  });
+
+  it("blocks creating a task with a past date", async () => {
+    const user = userEvent.setup();
+    const pastDate = getDateOffset(-1);
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findAllByRole("button", { name: "Ajouter une tâche" });
+
+    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.type(screen.getByLabelText("Titre"), "Tâche passée");
+    await user.type(screen.getByLabelText("Date (optionnel)"), pastDate);
+    await user.click(screen.getByRole("button", { name: "Ajouter" }));
+
+    expect(createTaskMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Popi ne peut pas voyager dans le passé. Choisis une date d'aujourd'hui ou plus tard."
+    );
+  });
+
+  it("creates a task with optional time when provided", async () => {
+    const user = userEvent.setup();
+    const futureDate = getDateOffset(1);
+
+    createTaskMock.mockResolvedValueOnce({
+      id: "t-2b",
+      title: "Rendez-vous",
+      due_at: "2026-03-17T14:30",
+      is_done: false,
+      category_id: null,
+      created_at: "2026-03-16",
+      category: null,
+    });
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findAllByRole("button", { name: "Ajouter une tâche" });
+
+    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.type(screen.getByLabelText("Titre"), "Rendez-vous");
+    await user.type(screen.getByLabelText("Date (optionnel)"), futureDate);
+    await user.type(screen.getByLabelText("Heure (optionnel)"), "14:30");
+    await user.click(screen.getByRole("button", { name: "Ajouter" }));
+
+    await waitFor(() => {
+      expect(createTaskMock).toHaveBeenCalledWith({
+        title: "Rendez-vous",
+        categoryId: null,
+        dueDate: `${futureDate}T14:30`,
+      });
+    });
+  });
+
+  it("restores and updates custom todo order from local storage", async () => {
+    getMyTasksMock.mockResolvedValueOnce([
+      {
+        id: "t-order-1",
+        title: "Premiere",
+        due_at: "2026-03-20",
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16T10:00:00.000Z",
+        category: null,
+      },
+      {
+        id: "t-order-2",
+        title: "Seconde",
+        due_at: "2026-03-17",
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16T09:00:00.000Z",
+        category: null,
+      },
+    ]);
+
+    window.localStorage.setItem("mimio-popi-task-order:anonymous", JSON.stringify(["t-order-1", "t-order-2"]));
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Premiere");
+
+    await waitFor(() => {
+      const titlesBefore = screen
+        .getByRole("region", { name: "Tâches à faire" })
+        .querySelectorAll(".task-row__title");
+
+      expect(Array.from(titlesBefore).map((node) => node.textContent)).toEqual(["Premiere", "Seconde"]);
     });
   });
 
@@ -456,7 +568,7 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole("heading", { name: "Mes tâches" });
+    await screen.findAllByRole("button", { name: "Ajouter une tâche" });
 
     await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     await user.type(screen.getByLabelText("Titre"), "   ");
@@ -477,7 +589,7 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole("heading", { name: "Mes tâches" });
+    await screen.findAllByRole("button", { name: "Ajouter une tâche" });
 
     await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     const titleInput = screen.getByLabelText("Titre");
@@ -511,7 +623,7 @@ describe("TasksPage", () => {
       </MemoryRouter>
     );
 
-    await screen.findByRole("heading", { name: "Mes tâches" });
+    await screen.findAllByRole("button", { name: "Ajouter une tâche" });
 
     await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     expect(screen.getByText("Popi n'arrive pas à charger les catégories pour le moment.")).toBeInTheDocument();
