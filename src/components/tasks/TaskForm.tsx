@@ -5,6 +5,20 @@ import { getTaskTitleError, normalizeTaskTitle, TASK_TITLE_MAX_LENGTH } from "..
 import type { CreateTaskInput, TaskCategory } from "../../types/tasks";
 import { estimateTaskImpactFromCategoryName } from "../../services/taskImpact/taskImpactEstimator";
 
+function getTodayDateInputValue() {
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 10);
+}
+
+function getDueDateError(date: string, todayDate: string) {
+  if (!date) {
+    return null;
+  }
+
+  return date < todayDate ? "Popi ne peut pas voyager dans le passé. Choisis une date d'aujourd'hui ou plus tard." : null;
+}
+
 type TaskFormProps = {
   categories: TaskCategory[];
   categoriesAvailable: boolean;
@@ -15,9 +29,20 @@ type TaskFormProps = {
     notes?: string | null;
     categoryId?: string | null;
     dueDate?: string | null;
+    dueTime?: string | null;
   };
   onSubmit: (payload: CreateTaskInput) => Promise<void>;
 };
+
+function buildDueDateValue(date: string, time: string) {
+  const normalizedDate = date.trim();
+  if (!normalizedDate) {
+    return null;
+  }
+
+  const normalizedTime = time.trim();
+  return normalizedTime ? `${normalizedDate}T${normalizedTime}` : normalizedDate;
+}
 
 export function TaskForm({
   categories,
@@ -31,12 +56,15 @@ export function TaskForm({
   const [notes, setNotes] = useState(initialValues?.notes ?? "");
   const [categoryId, setCategoryId] = useState(initialValues?.categoryId ?? "");
   const [dueDate, setDueDate] = useState(initialValues?.dueDate ?? "");
+  const [dueTime, setDueTime] = useState(initialValues?.dueTime ?? "");
   const [titleTouched, setTitleTouched] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const todayDate = useMemo(() => getTodayDateInputValue(), []);
   const titleError = useMemo(() => getTaskTitleError(title), [title]);
+  const dueDateError = useMemo(() => getDueDateError(dueDate, todayDate), [dueDate, todayDate]);
   const showTitleError = titleTouched && titleError;
 
   const selectedCategory = useMemo(
@@ -71,9 +99,10 @@ export function TaskForm({
     setNotes(initialValues?.notes ?? "");
     setCategoryId(initialValues?.categoryId ?? "");
     setDueDate(initialValues?.dueDate ?? "");
+    setDueTime(initialValues?.dueTime ?? "");
     setTitleTouched(false);
     setError(null);
-  }, [initialValues?.categoryId, initialValues?.dueDate, initialValues?.notes, initialValues?.title]);
+  }, [initialValues?.categoryId, initialValues?.dueDate, initialValues?.dueTime, initialValues?.notes, initialValues?.title]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -81,9 +110,11 @@ export function TaskForm({
 
     const normalizedTitle = normalizeTaskTitle(title);
     const normalizedNotes = notes.trim();
-    const validationError = getTaskTitleError(normalizedTitle);
+    const titleValidationError = getTaskTitleError(normalizedTitle);
+    const dateValidationError = getDueDateError(dueDate, todayDate);
 
-    if (validationError) {
+    if (titleValidationError || dateValidationError) {
+      setError(dateValidationError);
       return;
     }
 
@@ -94,7 +125,7 @@ export function TaskForm({
       const payload: CreateTaskInput = {
         title: normalizedTitle,
         categoryId: categoryId || null,
-        dueDate: dueDate || null,
+        dueDate: buildDueDateValue(dueDate, dueTime),
       };
 
       if (mode === "edit" || normalizedNotes.length > 0) {
@@ -108,6 +139,7 @@ export function TaskForm({
         setNotes("");
         setCategoryId("");
         setDueDate("");
+        setDueTime("");
         setTitleTouched(false);
       }
     } catch {
@@ -202,15 +234,45 @@ export function TaskForm({
         <input
           id="task-due-date"
           type="date"
+          min={todayDate}
           value={dueDate}
-          onChange={(event) => setDueDate(event.target.value)}
+          onChange={(event) => {
+            const nextDate = event.target.value;
+            setDueDate(nextDate);
+
+            if (!nextDate) {
+              setDueTime("");
+            }
+          }}
           disabled={submitting}
         />
       </label>
 
+      {dueDateError && <p role="alert">{dueDateError}</p>}
+
+      <label htmlFor="task-due-time">
+        Heure (optionnel)
+        <input
+          id="task-due-time"
+          type="time"
+          value={dueTime}
+          onChange={(event) => setDueTime(event.target.value)}
+          disabled={!dueDate || submitting}
+        />
+      </label>
+
+      {dueDate && <p role="note">Laisse l'heure vide si tu veux seulement noter la date.</p>}
+
       {dueDate && (
-        <button type="button" onClick={() => setDueDate("")} disabled={submitting}>
-          Effacer la date
+        <button
+          type="button"
+          onClick={() => {
+            setDueDate("");
+            setDueTime("");
+          }}
+          disabled={submitting}
+        >
+          Effacer l'échéance
         </button>
       )}
 
