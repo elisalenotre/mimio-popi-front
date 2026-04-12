@@ -13,6 +13,17 @@ export type StatusDefinition = {
   accentColor: string;
 };
 
+export type StatusDetailContent = {
+  definition: string;
+  normalization: string;
+  gentleTips: {
+    faible: string[];
+    modere: string[];
+    eleve: string[];
+    generic: string[];
+  };
+};
+
 export const DAILY_STATUS_BASELINE = 30;
 
 export const DEFAULT_USER_STATUSES: UserStatuses = {
@@ -70,6 +81,152 @@ export const STATUS_DEFINITIONS: StatusDefinition[] = [
     accentColor: "#8fcf9b",
   },
 ];
+
+export const STATUS_DETAIL_CONTENT: Record<StatusKey, StatusDetailContent> = {
+  fatigue: {
+    definition: "La fatigue reflète ton niveau d'energie disponible ici et maintenant. Elle peut bouger vite selon ton repos, ton rythme et ta charge mentale.",
+    normalization: "C'est ok d'avoir un coup de mou. L'important, c'est d'ajuster doucement ton rythme.",
+    gentleTips: {
+      faible: [
+        "Garder un rythme stable avec des pauses courtes entre deux taches.",
+        "Conserver ton elan sur une priorite simple et realiste.",
+      ],
+      modere: [
+        "Prevoir une micro-pause de 5 minutes avant de reprendre.",
+        "Alterner une tache demandante puis une tache legere.",
+        "Boire un verre d'eau et respirer lentement une minute.",
+      ],
+      eleve: [
+        "Prevoir une micro-pause (5 minutes).",
+        "Choisir une tache legere.",
+        "Boire un verre d'eau.",
+        "Si possible, avancer l'heure de coucher.",
+      ],
+      generic: [
+        "Faire une pause courte et bienveillante.",
+        "Decouper ta prochaine action en un pas tres simple.",
+      ],
+    },
+  },
+  stress: {
+    definition: "Le stress reflète la pression ressentie et la charge mentale du moment. Il indique surtout un besoin d'espace, de clarte ou de soutien.",
+    normalization: "Ressentir du stress ne veut pas dire que tu echoues. C'est un signal, pas un verdict.",
+    gentleTips: {
+      faible: [
+        "Continuer avec un rythme regulier et des objectifs raisonnables.",
+        "Noter ce qui t'aide pour le reutiliser plus tard.",
+      ],
+      modere: [
+        "Faire une pause respiration: 4 secondes inspire, 6 secondes expire.",
+        "Choisir une seule priorite pour la prochaine heure.",
+        "Reporter les decisions non urgentes.",
+      ],
+      eleve: [
+        "Faire une pause de 5 minutes sans ecran.",
+        "Revenir a une tache tres concrete et courte.",
+        "Demander de l'aide sur un point qui bloque.",
+      ],
+      generic: [
+        "Ralentir le rythme pendant quelques minutes.",
+        "Reprioriser sur une seule action utile.",
+      ],
+    },
+  },
+  joie: {
+    definition: "La joie reflète ton elan positif et le plaisir ressenti dans la journee. Elle peut monter grace a de petits moments qui comptent.",
+    normalization: "Ta joie peut varier d'un jour a l'autre, et c'est normal.",
+    gentleTips: {
+      faible: [
+        "Prevoir une activite courte qui te fait du bien.",
+        "Te reconnecter a une personne ou un lieu rassurant.",
+      ],
+      modere: [
+        "Garder un moment agreable dans la journee, meme bref.",
+        "Noter une petite victoire pour renforcer l'elan.",
+      ],
+      eleve: [
+        "Capitaliser sur ton energie pour avancer sur une tache importante.",
+        "Partager ce bon moment avec quelqu'un si tu en as envie.",
+      ],
+      generic: [
+        "Accueillir ce que tu ressens sans te juger.",
+        "Chercher un petit moment qui te ressource.",
+      ],
+    },
+  },
+  sante: {
+    definition: "La sante represente ton ressenti global cote corps et energie. Ce n'est pas un diagnostic medical, mais un repere de bien-etre.",
+    normalization: "Ton corps envoie des signaux utiles. Les ecouter, c'est deja avancer.",
+    gentleTips: {
+      faible: [
+        "Conserver tes habitudes qui te font du bien.",
+        "Garder des temps de recuperation entre deux efforts.",
+      ],
+      modere: [
+        "Ajouter un peu de mouvement doux dans la journee.",
+        "Verrouiller un vrai temps de pause pour souffler.",
+      ],
+      eleve: [
+        "Allege ton planning si possible.",
+        "Hydrate-toi et privilegie des repas simples et regulers.",
+        "Accorde-toi un temps de repos sans culpabiliser.",
+      ],
+      generic: [
+        "Prendre une pause et respirer calmement.",
+        "Te concentrer sur une habitude bien-etre facile a tenir.",
+      ],
+    },
+  },
+  motivation: {
+    definition: "La motivation mesure ton envie d'avancer sur ce qui compte pour toi. Elle depend souvent du niveau d'energie, de clarte et de charge.",
+    normalization: "Une motivation basse n'est pas un defaut. C'est souvent le signe qu'il faut simplifier.",
+    gentleTips: {
+      faible: [
+        "Choisir une mini-action de moins de 10 minutes.",
+        "Clarifier une seule priorite realiste pour aujourd'hui.",
+      ],
+      modere: [
+        "Decouper la prochaine tache en deux etapes simples.",
+        "Demarrer par l'etape la plus facile pour lancer l'elan.",
+      ],
+      eleve: [
+        "Profiter de l'elan pour avancer sur une tache de fond.",
+        "Prevoir une pause ensuite pour garder un rythme durable.",
+      ],
+      generic: [
+        "Commencer petit, puis ajuster selon ton energie.",
+        "Te feliciter pour chaque pas, meme court.",
+      ],
+    },
+  },
+  finances: {
+    definition: "Les finances refletent ton ressenti sur l'equilibre de ton budget actuel. C'est un indicateur de confort et de charge mentale liee a l'argent.",
+    normalization: "C'est normal que ce sujet soit sensible. Avancer par petits pas aide souvent.",
+    gentleTips: {
+      faible: [
+        "Continuer un suivi simple de tes depenses importantes.",
+        "Prevoir un mini-point budget hebdomadaire.",
+      ],
+      modere: [
+        "Lister les depenses fixes et celles a ajuster cette semaine.",
+        "Planifier une action simple: verifier un abonnement ou une facture.",
+      ],
+      eleve: [
+        "Faire un point budget court, sans chercher la perfection.",
+        "Prioriser les depenses essentielles pour les prochains jours.",
+        "Demander un coup de main administratif si besoin.",
+      ],
+      generic: [
+        "Faire un petit point budget en mode bienveillance.",
+        "Choisir une seule action concrete pour retrouver un peu de clarte.",
+      ],
+    },
+  },
+};
+
+export function getStatusDefinitionByKey(statusKey: string): StatusDefinition | null {
+  return STATUS_DEFINITIONS.find((definition) => definition.key === statusKey) ?? null;
+}
 
 export function clampStatusValue(value: unknown): number | null {
   if (value === null) {

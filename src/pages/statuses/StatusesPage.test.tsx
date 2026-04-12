@@ -43,6 +43,7 @@ describe("StatusesPage", () => {
     expect(screen.getByLabelText("Valeur Santé : 50 sur 100")).toHaveTextContent("50/100");
     expect(screen.getByLabelText("Valeur Motivation : 45 sur 100")).toHaveTextContent("45/100");
     expect(screen.getByLabelText("Valeur Finances : 55 sur 100")).toHaveTextContent("55/100");
+    expect(screen.getByRole("link", { name: "Stress" })).toHaveAttribute("href", "/statuses/stress");
   });
 
   it("shows a fallback when one status is unavailable", async () => {
