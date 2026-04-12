@@ -13,14 +13,24 @@ export type StatusDefinition = {
   accentColor: string;
 };
 
+export const DAILY_STATUS_BASELINE = 30;
+
 export const DEFAULT_USER_STATUSES: UserStatuses = {
-  fatigue: 50,
-  stress: 50,
-  joie: 50,
-  sante: 50,
-  motivation: 50,
-  finances: 50,
+  fatigue: DAILY_STATUS_BASELINE,
+  stress: DAILY_STATUS_BASELINE,
+  joie: DAILY_STATUS_BASELINE,
+  sante: DAILY_STATUS_BASELINE,
+  motivation: DAILY_STATUS_BASELINE,
+  finances: DAILY_STATUS_BASELINE,
 };
+
+export function getStatusDayKey(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 
 export const STATUS_DEFINITIONS: StatusDefinition[] = [
   {

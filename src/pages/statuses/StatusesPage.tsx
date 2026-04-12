@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
 import { StatusCard } from "../../components/statuses/StatusCard";
 import { getMyStatuses } from "../../services/status/statusService";
-import { STATUS_DEFINITIONS, type UserStatuses } from "../../types/statuses";
+import { STATUS_DEFINITIONS, getStatusDayKey, type UserStatuses } from "../../types/statuses";
 import "./StatusesPage.css";
 
 function StatusCardsSkeleton() {
@@ -26,6 +26,7 @@ export default function StatusesPage() {
   const [statuses, setStatuses] = useState<UserStatuses | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dayRefreshToken, setDayRefreshToken] = useState(0);
 
   const loadStatuses = async () => {
     setLoading(true);
@@ -43,6 +44,20 @@ export default function StatusesPage() {
 
   useEffect(() => {
     void loadStatuses();
+  }, [dayRefreshToken]);
+
+  useEffect(() => {
+    let lastDayKey = getStatusDayKey();
+
+    const interval = window.setInterval(() => {
+      const currentDayKey = getStatusDayKey();
+      if (currentDayKey !== lastDayKey) {
+        lastDayKey = currentDayKey;
+        setDayRefreshToken((current) => current + 1);
+      }
+    }, 60000);
+
+    return () => window.clearInterval(interval);
   }, []);
 
   return (
