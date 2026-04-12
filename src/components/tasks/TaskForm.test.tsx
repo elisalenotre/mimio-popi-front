@@ -42,20 +42,20 @@ describe("TaskForm impact estimate", () => {
 
     await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "c-travail");
 
-    expect(screen.getByText("Fatigue: +4")).toBeInTheDocument();
-    expect(screen.getByText("Stress: +3")).toBeInTheDocument();
-    expect(screen.getByText("Joie: -1")).toBeInTheDocument();
+    expect(screen.getByText("Fatigue: +9")).toBeInTheDocument();
+    expect(screen.getByText("Stress: +8")).toBeInTheDocument();
+    expect(screen.getByText("Joie: -5")).toBeInTheDocument();
     expect(screen.getByText("Santé: 0")).toBeInTheDocument();
-    expect(screen.getByText("Motivation: +2")).toBeInTheDocument();
-    expect(screen.getByText("Finances: +1")).toBeInTheDocument();
+    expect(screen.getByText("Motivation: +7")).toBeInTheDocument();
+    expect(screen.getByText("Finances: +6")).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "c-sante");
 
-    expect(screen.getByText("Fatigue: -2")).toBeInTheDocument();
-    expect(screen.getByText("Stress: -1")).toBeInTheDocument();
-    expect(screen.getByText("Joie: +1")).toBeInTheDocument();
-    expect(screen.getByText("Santé: +3")).toBeInTheDocument();
-    expect(screen.getByText("Motivation: +1")).toBeInTheDocument();
+    expect(screen.getByText("Fatigue: -7")).toBeInTheDocument();
+    expect(screen.getByText("Stress: -6")).toBeInTheDocument();
+    expect(screen.getByText("Joie: +5")).toBeInTheDocument();
+    expect(screen.getByText("Santé: +10")).toBeInTheDocument();
+    expect(screen.getByText("Motivation: +6")).toBeInTheDocument();
     expect(screen.getByText("Finances: 0")).toBeInTheDocument();
   });
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMyStatuses } from "../../services/status/statusService";
-import { STATUS_DEFINITIONS, type UserStatuses } from "../../types/statuses";
+import { STATUS_DEFINITIONS, getStatusDayKey, type UserStatuses } from "../../types/statuses";
 import "./StatusMiniPanel.css";
 
 function MiniRow({ label, value, accentColor }: { label: string; value: number | null; accentColor: string }) {
@@ -42,12 +42,34 @@ function MiniPanelSkeleton() {
   );
 }
 
-export function StatusMiniPanel() {
+type StatusMiniPanelProps = {
+  refreshToken?: number;
+};
+
+export function StatusMiniPanel({ refreshToken = 0 }: StatusMiniPanelProps) {
   const [statuses, setStatuses] = useState<UserStatuses | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [dayRefreshToken, setDayRefreshToken] = useState(0);
 
   useEffect(() => {
+    let lastDayKey = getStatusDayKey();
+
+    const interval = window.setInterval(() => {
+      const currentDayKey = getStatusDayKey();
+      if (currentDayKey !== lastDayKey) {
+        lastDayKey = currentDayKey;
+        setDayRefreshToken((current) => current + 1);
+      }
+    }, 60000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(false);
+
     getMyStatuses()
       .then((result) => {
         setStatuses(result);
@@ -58,7 +80,7 @@ export function StatusMiniPanel() {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [refreshToken, dayRefreshToken]);
 
   return (
     <div className="status-mini-panel">

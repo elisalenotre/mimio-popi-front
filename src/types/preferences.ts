@@ -19,4 +19,6 @@ export type Preferences = {
   mascot_message_intensity?: MascotMessageIntensity;
   help_texts_enabled?: boolean;
   statuses?: StatusPreferences;
+  statuses_day_key?: string;
+  statuses_daily_base?: number;
 };

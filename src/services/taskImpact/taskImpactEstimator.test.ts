@@ -7,22 +7,22 @@ import {
 describe("taskImpactEstimator", () => {
   it("returns mapped deltas for Travail", () => {
     expect(estimateTaskImpactFromCategoryName("Travail")).toEqual({
-      fatigue: 4,
-      stress: 3,
-      joie: -1,
+      fatigue: 9,
+      stress: 8,
+      joie: -5,
       sante: 0,
-      motivation: 2,
-      finances: 1,
+      motivation: 7,
+      finances: 6,
     });
   });
 
   it("returns mapped deltas for Sante, including accented input", () => {
     expect(estimateTaskImpactFromCategoryName("Santé")).toEqual({
-      fatigue: -2,
-      stress: -1,
-      joie: 1,
-      sante: 3,
-      motivation: 1,
+      fatigue: -7,
+      stress: -6,
+      joie: 5,
+      sante: 10,
+      motivation: 6,
       finances: 0,
     });
   });
@@ -40,45 +40,45 @@ describe("taskImpactEstimator", () => {
 
   it("returns mapped deltas for Etudes", () => {
     expect(estimateTaskImpactFromCategoryName("Études")).toEqual({
-      fatigue: 3,
-      stress: 2,
-      joie: 1,
-      sante: 1,
-      motivation: 2,
-      finances: -1,
+      fatigue: 8,
+      stress: 7,
+      joie: 5,
+      sante: 5,
+      motivation: 9,
+      finances: -5,
     });
   });
 
   it("returns mapped deltas for Social", () => {
     expect(estimateTaskImpactFromCategoryName("Social")).toEqual({
-      fatigue: -2,
-      stress: -2,
-      joie: 3,
-      sante: 1,
-      motivation: 1,
-      finances: -1,
+      fatigue: -6,
+      stress: -7,
+      joie: 8,
+      sante: 5,
+      motivation: 5,
+      finances: -5,
     });
   });
 
   it("returns mapped deltas for Maison", () => {
     expect(estimateTaskImpactFromCategoryName("Maison")).toEqual({
-      fatigue: 2,
-      stress: -1,
-      joie: 1,
-      sante: 1,
-      motivation: 1,
-      finances: -1,
+      fatigue: 6,
+      stress: -5,
+      joie: 5,
+      sante: 5,
+      motivation: 6,
+      finances: -5,
     });
   });
 
   it("returns mapped deltas for Loisirs", () => {
     expect(estimateTaskImpactFromCategoryName("Loisirs")).toEqual({
-      fatigue: -3,
-      stress: -2,
-      joie: 3,
-      sante: 1,
-      motivation: 1,
-      finances: -1,
+      fatigue: -8,
+      stress: -7,
+      joie: 9,
+      sante: 5,
+      motivation: 6,
+      finances: -5,
     });
   });
 
@@ -97,12 +97,12 @@ describe("taskImpactEstimator", () => {
     expect(estimateVersionedTaskImpactFromCategoryName("Travail")).toEqual({
       version: "v1",
       deltas: {
-        fatigue: 4,
-        stress: 3,
-        joie: -1,
+        fatigue: 9,
+        stress: 8,
+        joie: -5,
         sante: 0,
-        motivation: 2,
-        finances: 1,
+        motivation: 7,
+        finances: 6,
       },
     });
   });
