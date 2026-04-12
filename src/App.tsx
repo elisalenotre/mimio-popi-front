@@ -11,6 +11,8 @@ const ForgotPasswordPage = lazy(() => import("./pages/auth/ForgotPasswordPage"))
 const ResetPasswordPage = lazy(() => import("./pages/auth/ResetPasswordPage"));
 const OnboardingPage = lazy(() => import("./pages/params/OnBoardingPage"));
 const SettingsPage = lazy(() => import("./pages/params/SettingsPage"));
+const StatusesPage = lazy(() => import("./pages/statuses/StatusesPage"));
+const StatusDetailPage = lazy(() => import("./pages/statuses/StatusDetailPage"));
 const TasksPage = lazy(() => import("./pages/tasks/TasksPage"));
 const RoomPage = lazy(() => import("./pages/room/RoomPage"));
 
@@ -95,7 +97,29 @@ export default function App() {
         element={
           <RequireOnboarding>
             <Suspense fallback={<PageLoader />}>
+              <StatusesPage />
+            </Suspense>
+          </RequireOnboarding>
+        }
+      />
+
+      <Route
+        path="/tasks"
+        element={
+          <RequireOnboarding>
+            <Suspense fallback={<PageLoader />}>
               <TasksPage />
+            </Suspense>
+          </RequireOnboarding>
+        }
+      />
+
+      <Route
+        path="/statuses/:statusKey"
+        element={
+          <RequireOnboarding>
+            <Suspense fallback={<PageLoader />}>
+              <StatusDetailPage />
             </Suspense>
           </RequireOnboarding>
         }

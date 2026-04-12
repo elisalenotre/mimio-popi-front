@@ -1,0 +1,155 @@
+.statuses-page-layout {
+  width: min(1240px, 97vw);
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.45rem 1.5rem 1.8rem;
+  border: 2px solid rgba(46, 47, 47, 0.7);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 229, 0.9) 0%, rgba(244, 251, 255, 0.78) 100%);
+  box-shadow:
+    8px 8px 0 rgba(46, 47, 47, 0.2),
+    0 16px 28px rgba(46, 47, 47, 0.12);
+}
+
+.statuses-page-main {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  animation: none;
+}
+
+.statuses-page-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.95fr);
+  gap: 1rem;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
+.statuses-page-hero__eyebrow {
+  margin: 0 0 0.25rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.statuses-page-summary {
+  display: grid;
+  gap: 0.65rem;
+  align-content: start;
+  padding: 1rem;
+  border: 2px dashed rgba(46, 47, 47, 0.28);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(198, 236, 174, 0.34) 0%, rgba(255, 255, 245, 0.85) 100%);
+}
+
+.statuses-page-summary h2,
+.statuses-page-summary p {
+  margin: 0;
+}
+
+.statuses-page-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  padding: 0.72rem 1.1rem;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+  background: linear-gradient(180deg, #f4fbff 0%, var(--sky) 78%, #9ccff6 100%);
+  box-shadow: 3px 3px 0 rgba(46, 47, 47, 0.32);
+}
+
+.statuses-page-link-button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 rgba(46, 47, 47, 0.34);
+}
+
+.statuses-page-error {
+  display: grid;
+  justify-items: start;
+  gap: 0.55rem;
+  padding: 1rem;
+  border: 2px solid rgba(247, 108, 94, 0.58);
+  border-radius: 16px;
+  background: rgba(247, 108, 94, 0.14);
+}
+
+.statuses-page-error h2,
+.statuses-page-error p {
+  margin: 0;
+}
+
+.statuses-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.status-card--skeleton {
+  pointer-events: none;
+}
+
+.status-card__skeleton-line,
+.status-card__skeleton-bar {
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(46, 47, 47, 0.08) 0%, rgba(46, 47, 47, 0.16) 50%, rgba(46, 47, 47, 0.08) 100%);
+  background-size: 200% 100%;
+  animation: statuses-skeleton 1.4s ease-in-out infinite;
+}
+
+.status-card__skeleton-line {
+  height: 12px;
+}
+
+.status-card__skeleton-line--short {
+  width: 38%;
+}
+
+.status-card__skeleton-line--title {
+  width: 62%;
+  height: 22px;
+}
+
+.status-card__skeleton-bar {
+  width: 100%;
+  height: 16px;
+}
+
+@keyframes statuses-skeleton {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .statuses-page-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .statuses-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .statuses-page-layout {
+    padding: 1rem 0.9rem 1.2rem;
+    border-radius: 14px;
+  }
+
+  .statuses-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+}

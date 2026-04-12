@@ -1,5 +1,14 @@
 export type MascotMessageIntensity = "discrete" | "normal";
 
+export type StatusPreferences = {
+  fatigue?: number | null;
+  stress?: number | null;
+  joie?: number | null;
+  sante?: number | null;
+  motivation?: number | null;
+  finances?: number | null;
+};
+
 export type Preferences = {
   pace?: string;
   priority?: string;
@@ -9,4 +18,7 @@ export type Preferences = {
 
   mascot_message_intensity?: MascotMessageIntensity;
   help_texts_enabled?: boolean;
+  statuses?: StatusPreferences;
+  statuses_day_key?: string;
+  statuses_daily_base?: number;
 };
