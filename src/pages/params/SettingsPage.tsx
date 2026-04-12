@@ -134,7 +134,7 @@ export default function SettingsPage() {
         <main>
           <h1>Profil / Paramètres</h1>
           <p className="settings-back-link">
-            <Link to="/" className="back-home-link">
+            <Link to="/tasks" className="back-home-link">
               <img className="back-home-link__icon" src={backIcon} alt="" aria-hidden="true" />
               Retour aux tâches
             </Link>

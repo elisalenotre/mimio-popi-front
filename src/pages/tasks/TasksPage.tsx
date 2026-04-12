@@ -13,6 +13,7 @@ import {
   updateTask,
 } from "../../services/task/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
+import { StatusMiniPanel } from "../../components/statuses/StatusMiniPanel";
 import happyMascot from "../../assets/popi-mimio-very-happy.svg";
 import plusIcon from "../../assets/icons/Plus.svg";
 import "./TasksPage.css";
@@ -160,6 +161,7 @@ export default function TasksPage() {
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [statusRefreshToken, setStatusRefreshToken] = useState(0);
   const [now, setNow] = useState(() => new Date());
   const [isClockVisible, setIsClockVisible] = useState(true);
 
@@ -339,12 +341,16 @@ export default function TasksPage() {
     setTasks((current) => current.map((item) => (item.id === task.id ? { ...item, is_done: nextDone } : item)));
 
     try {
-      const updated = await setTaskDoneState(task.id, nextDone);
-      setTasks((current) => current.map((item) => (item.id === task.id ? updated : item)));
-      setSuccess(nextDone ? "Youpi, Mimio coche cette tâche comme faite !" : "Hop, Mimio remet cette tâche à faire.");
+      const result = await setTaskDoneState(task.id, nextDone);
+      setTasks((current) => current.map((item) => (item.id === task.id ? result.task : item)));
+
+      // Statuses can change on both check and uncheck flows.
+      setStatusRefreshToken((current) => current + 1);
+
+      setSuccess(nextDone ? "Petit pas, grands effets." : "Hop, Mimio remet cette tâche à faire.");
     } catch {
       setTasks((current) => current.map((item) => (item.id === task.id ? { ...item, is_done: task.is_done } : item)));
-      setError("Popi n'a pas réussi à mettre à jour la tâche. Réessaie.");
+      setError("Impossible de mettre à jour tes statuts. Réessaie.");
     } finally {
       setUpdatingTaskIds((current) => current.filter((id) => id !== task.id));
     }
@@ -433,9 +439,8 @@ export default function TasksPage() {
             <p>Popi et Mimio t'aident à garder le cap: ajoute tes tâches en cliquant sur le "+" dans la main de Mimio.</p>
           </section>
 
-          <aside className="tasks-page-status" aria-label="Colonne statut">
-            <h3>Statut</h3>
-            <p>Popi et Mimio préparent cette zone.</p>
+          <aside className="tasks-page-status" aria-label="Aperçu statuts">
+            <StatusMiniPanel refreshToken={statusRefreshToken} />
           </aside>
 
           <main className="tasks-page-main" aria-label="Bloc liste des tâches">
@@ -458,9 +463,8 @@ export default function TasksPage() {
           <p>Popi et Mimio t'aident à garder le cap: ajoute tes tâches en cliquant sur le "+" dans la main de Mimio.</p>
         </section>
 
-        <aside className="tasks-page-status" aria-label="Colonne statut">
-          <h3>Statut</h3>
-          <p>Popi et Mimio préparent les indicateurs à venir.</p>
+        <aside className="tasks-page-status" aria-label="Aperçu statuts">
+          <StatusMiniPanel refreshToken={statusRefreshToken} />
         </aside>
 
         <main className="tasks-page-main" aria-label="Bloc liste des tâches">

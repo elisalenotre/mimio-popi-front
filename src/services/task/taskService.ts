@@ -1,6 +1,16 @@
 import { supabase } from "../../lib/supabaseClient";
 import { normalizeTaskTitle } from "../taskValidation/taskValidation";
+import { normalizeTaskImpact } from "../../types/tasks";
 import type { CreateTaskInput, Task, TaskCategory, UpdateTaskInput } from "../../types/tasks";
+import { estimateVersionedTaskImpactFromCategoryName } from "../taskImpact/taskImpactEstimator";
+import {
+  DAILY_STATUS_BASELINE,
+  DEFAULT_USER_STATUSES,
+  STATUS_KEYS,
+  getStatusDayKey,
+  normalizeStatuses,
+} from "../../types/statuses";
+import type { Preferences } from "../../types/preferences";
 
 type TaskRow = {
   id: string;
@@ -10,6 +20,16 @@ type TaskRow = {
   is_done: boolean;
   category_id: string | null;
   created_at: string;
+  impact?: unknown;
+};
+
+type TaskImpactApplicationResult = {
+  task: Task;
+  impactApplied: boolean;
+};
+
+type TaskDetailsRow = TaskRow & {
+  done_at?: string | null;
 };
 
 type CategoryRow = {
@@ -46,6 +66,7 @@ async function getCurrentUserId() {
 function toTask(row: TaskRow, categoriesById: Map<string, TaskCategory>): Task {
   return {
     ...row,
+    impact: normalizeTaskImpact(row.impact),
     category: row.category_id ? (categoriesById.get(row.category_id) ?? null) : null,
   };
 }
@@ -61,6 +82,124 @@ async function fetchCategoriesMap(userId: string) {
 
   const rows = (data ?? []) as CategoryRow[];
   return new Map(rows.map((category) => [category.id, category as TaskCategory]));
+}
+
+async function getTaskDetails(userId: string, taskId: string) {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("id, title, notes, due_at, is_done, done_at, category_id, created_at, impact")
+    .eq("id", taskId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("Task not found");
+  }
+
+  return data as TaskDetailsRow;
+}
+
+function getTodayStatusContext(currentPreferences: Record<string, unknown>, now = new Date()) {
+  const preferences = { ...currentPreferences };
+  const currentDayKey = getStatusDayKey(now);
+  const storedDayKey = typeof (preferences as Preferences).statuses_day_key === "string"
+    ? ((preferences as Preferences).statuses_day_key as string)
+    : null;
+  const storedBaseline = typeof (preferences as Preferences).statuses_daily_base === "number"
+    ? (preferences as Preferences).statuses_daily_base
+    : null;
+
+  const currentStatuses =
+    storedDayKey === currentDayKey && storedBaseline === DAILY_STATUS_BASELINE
+      ? normalizeStatuses((preferences as Preferences).statuses)
+      : { ...DEFAULT_USER_STATUSES };
+
+  return {
+    preferences,
+    currentDayKey,
+    currentStatuses,
+  };
+}
+
+function getTaskDoneDayKey(task: TaskDetailsRow) {
+  if (!task.done_at) {
+    return null;
+  }
+
+  const date = new Date(task.done_at);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return getStatusDayKey(date);
+}
+
+function applyImpactToStatuses(
+  currentPreferences: Record<string, unknown>,
+  rawImpact: unknown,
+  direction: 1 | -1,
+  now = new Date()
+): Record<string, unknown> {
+  const { preferences, currentDayKey, currentStatuses } = getTodayStatusContext(currentPreferences, now);
+  const impact = normalizeTaskImpact(rawImpact);
+
+  const nextStatuses = STATUS_KEYS.reduce((accumulator, key) => {
+    const currentValue = currentStatuses[key] ?? 0;
+    const nextValue = currentValue + impact[key] * direction;
+    accumulator[key] = Math.min(100, Math.max(0, Math.round(nextValue)));
+    return accumulator;
+  }, { ...currentStatuses });
+
+  return {
+    ...preferences,
+    statuses: nextStatuses,
+    statuses_day_key: currentDayKey,
+    statuses_daily_base: DAILY_STATUS_BASELINE,
+  };
+}
+
+async function readProfilePreferences(userId: string) {
+  const { data, error } = await supabase.from("profiles").select("preferences").eq("id", userId).maybeSingle();
+
+  if (error) throw error;
+
+  return (data?.preferences ?? {}) as Record<string, unknown>;
+}
+
+async function writeProfilePreferences(userId: string, preferences: Record<string, unknown>) {
+  const { error: upsertError } = await supabase.from("profiles").upsert(
+    {
+      id: userId,
+      preferences,
+    },
+    { onConflict: "id" }
+  );
+
+  if (upsertError) throw upsertError;
+}
+
+async function applyTaskImpactToProfileStatuses(userId: string, rawImpact: unknown, direction: 1 | -1) {
+  const currentPreferences = await readProfilePreferences(userId);
+  const nextPreferences = applyImpactToStatuses(currentPreferences, rawImpact, direction);
+
+  await writeProfilePreferences(userId, nextPreferences);
+}
+
+async function resetStatusesForToday(userId: string) {
+  const currentPreferences = await readProfilePreferences(userId);
+  const { preferences, currentDayKey } = getTodayStatusContext(currentPreferences);
+
+  if ((preferences as Preferences).statuses_day_key === currentDayKey) {
+    return;
+  }
+
+  await writeProfilePreferences(userId, {
+    ...preferences,
+    statuses: { ...DEFAULT_USER_STATUSES },
+    statuses_day_key: currentDayKey,
+    statuses_daily_base: DAILY_STATUS_BASELINE,
+  });
 }
 
 async function readCategoryBootstrapPreferences(userId: string) {
@@ -181,7 +320,7 @@ export async function getMyTasks() {
 
   const { data, error } = await supabase
     .from("tasks")
-    .select("id, title, notes, due_at, is_done, category_id, created_at")
+    .select("id, title, notes, due_at, is_done, category_id, created_at, impact")
     .eq("user_id", userId)
     .order("is_done", { ascending: true })
     .order("due_at", { ascending: true, nullsFirst: false })
@@ -202,15 +341,71 @@ export async function getMyTasks() {
 export async function setTaskDoneState(taskId: string, isDone: boolean) {
   const userId = await getCurrentUserId();
 
-  const { data, error } = await supabase
-    .from("tasks")
-    .update({ is_done: isDone })
-    .eq("id", taskId)
-    .eq("user_id", userId)
-    .select("id, title, notes, due_at, is_done, category_id, created_at")
-    .single();
+  let taskRow: TaskRow;
+  let impactApplied = false;
 
-  if (error) throw error;
+  if (isDone) {
+    const { data, error } = await supabase
+      .from("tasks")
+      .update({ is_done: true, done_at: new Date().toISOString() })
+      .eq("id", taskId)
+      .eq("user_id", userId)
+      .eq("is_done", false)
+      .select("id, title, notes, due_at, is_done, category_id, created_at, impact")
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      const existingTask = await getTaskDetails(userId, taskId);
+      taskRow = existingTask;
+    } else {
+      taskRow = data as TaskRow;
+      try {
+        await applyTaskImpactToProfileStatuses(userId, taskRow.impact, 1);
+        impactApplied = true;
+      } catch (statusError) {
+        await supabase
+          .from("tasks")
+          .update({ is_done: false, done_at: null })
+          .eq("id", taskId)
+          .eq("user_id", userId);
+
+        throw statusError;
+      }
+    }
+  } else {
+    const previousTask = await getTaskDetails(userId, taskId);
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .update({ is_done: false, done_at: null })
+      .eq("id", taskId)
+      .eq("user_id", userId)
+      .select("id, title, notes, due_at, is_done, category_id, created_at, impact")
+      .single();
+
+    if (error) throw error;
+    taskRow = data as TaskRow;
+
+    const shouldRollbackImpact = previousTask.is_done && getTaskDoneDayKey(previousTask) === getStatusDayKey();
+
+    try {
+      if (shouldRollbackImpact) {
+        await applyTaskImpactToProfileStatuses(userId, previousTask.impact, -1);
+      } else {
+        await resetStatusesForToday(userId);
+      }
+    } catch (statusError) {
+      await supabase
+        .from("tasks")
+        .update({ is_done: true, done_at: previousTask.done_at ?? new Date().toISOString() })
+        .eq("id", taskId)
+        .eq("user_id", userId);
+
+      throw statusError;
+    }
+  }
 
   let categoriesById = new Map<string, TaskCategory>();
   try {
@@ -219,7 +414,12 @@ export async function setTaskDoneState(taskId: string, isDone: boolean) {
     categoriesById = new Map<string, TaskCategory>();
   }
 
-  return toTask(data as TaskRow, categoriesById);
+  const task = toTask(taskRow, categoriesById);
+
+  return {
+    task,
+    impactApplied,
+  } as TaskImpactApplicationResult;
 }
 
 export async function createTask(input: CreateTaskInput) {
@@ -239,6 +439,8 @@ export async function createTask(input: CreateTaskInput) {
     categoryId = category?.id ?? null;
   }
 
+  const estimatedImpact = estimateVersionedTaskImpactFromCategoryName(category?.name);
+
   const { data, error } = await supabase
     .from("tasks")
     .insert({
@@ -248,8 +450,9 @@ export async function createTask(input: CreateTaskInput) {
       category_id: categoryId,
       due_at: dueDate,
       is_done: false,
+      impact: estimatedImpact,
     })
-    .select("id, title, notes, due_at, is_done, category_id, created_at")
+    .select("id, title, notes, due_at, is_done, category_id, created_at, impact")
     .single();
 
   if (error) throw error;
@@ -257,6 +460,7 @@ export async function createTask(input: CreateTaskInput) {
   const row = data as TaskRow;
   return {
     ...row,
+    impact: normalizeTaskImpact(row.impact),
     category,
   } as Task;
 }
@@ -264,7 +468,7 @@ export async function createTask(input: CreateTaskInput) {
 export async function updateTask(taskId: string, input: UpdateTaskInput) {
   const userId = await getCurrentUserId();
 
-  const updates: Record<string, string | null> = {};
+  const updates: Record<string, unknown> = {};
 
   if (input.title !== undefined) {
     updates.title = normalizeTaskTitle(input.title);
@@ -277,9 +481,12 @@ export async function updateTask(taskId: string, input: UpdateTaskInput) {
   if (input.categoryId !== undefined) {
     if (input.categoryId) {
       const categoriesById = await fetchCategoriesMap(userId);
-      updates.category_id = categoriesById.has(input.categoryId) ? input.categoryId : null;
+      const category = categoriesById.get(input.categoryId) ?? null;
+      updates.category_id = category?.id ?? null;
+      updates.impact = estimateVersionedTaskImpactFromCategoryName(category?.name);
     } else {
       updates.category_id = null;
+      updates.impact = estimateVersionedTaskImpactFromCategoryName(null);
     }
   }
 
@@ -292,7 +499,7 @@ export async function updateTask(taskId: string, input: UpdateTaskInput) {
     .update(updates)
     .eq("id", taskId)
     .eq("user_id", userId)
-    .select("id, title, notes, due_at, is_done, category_id, created_at")
+    .select("id, title, notes, due_at, is_done, category_id, created_at, impact")
     .single();
 
   if (error) throw error;

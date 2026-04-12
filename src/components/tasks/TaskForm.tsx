@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { STATUS_DEFINITIONS } from "../../types/statuses";
+import { ZERO_TASK_IMPACT } from "../../types/tasks";
 import { getTaskTitleError, normalizeTaskTitle, TASK_TITLE_MAX_LENGTH } from "../../services/taskValidation/taskValidation";
 import type { CreateTaskInput, TaskCategory } from "../../types/tasks";
+import { estimateTaskImpactFromCategoryName } from "../../services/taskImpact/taskImpactEstimator";
 
 function getTodayDateInputValue() {
   const now = new Date();
@@ -63,6 +66,33 @@ export function TaskForm({
   const titleError = useMemo(() => getTaskTitleError(title), [title]);
   const dueDateError = useMemo(() => getDueDateError(dueDate, todayDate), [dueDate, todayDate]);
   const showTitleError = titleTouched && titleError;
+
+  const selectedCategory = useMemo(
+    () => categories.find((category) => category.id === categoryId) ?? null,
+    [categories, categoryId]
+  );
+
+  const estimatedImpact = useMemo(() => {
+    try {
+      return estimateTaskImpactFromCategoryName(selectedCategory?.name);
+    } catch {
+      return { ...ZERO_TASK_IMPACT };
+    }
+  }, [selectedCategory?.name]);
+
+  const impactCalculationError = useMemo(() => {
+    try {
+      estimateTaskImpactFromCategoryName(selectedCategory?.name);
+      return null;
+    } catch {
+      return "Impossible d'estimer l'impact pour le moment.";
+    }
+  }, [selectedCategory?.name]);
+
+  const formatDelta = (value: number) => {
+    if (value > 0) return `+${value}`;
+    return `${value}`;
+  };
 
   useEffect(() => {
     setTitle(initialValues?.title ?? "");
@@ -156,6 +186,32 @@ export function TaskForm({
       </label>
 
       {categoriesError && <p role="alert">{categoriesError}</p>}
+
+      <section className="task-impact-estimate" aria-label="Impact estimé" aria-live="polite">
+        <p className="task-impact-estimate__title">Impact estimé</p>
+        <p className="task-impact-estimate__subtitle">Une estimation pour t'aider à choisir.</p>
+
+        <ul className="task-impact-estimate__list">
+          {STATUS_DEFINITIONS.map((definition) => {
+            const delta = estimatedImpact[definition.key];
+            const deltaClassName =
+              delta > 0
+                ? "task-impact-estimate__delta task-impact-estimate__delta--positive"
+                : delta < 0
+                  ? "task-impact-estimate__delta task-impact-estimate__delta--negative"
+                  : "task-impact-estimate__delta task-impact-estimate__delta--neutral";
+
+            return (
+              <li key={definition.key} className="task-impact-estimate__item">
+                <span>{definition.label}</span>
+                <strong className={deltaClassName}>{`${definition.label}: ${formatDelta(delta)}`}</strong>
+              </li>
+            );
+          })}
+        </ul>
+
+        {impactCalculationError && <p role="status">{impactCalculationError}</p>}
+      </section>
 
       {categoriesAvailable && categories.length === 0 && <p role="status">Popi n'a trouvé aucune catégorie pour l'instant.</p>}
 

@@ -65,13 +65,16 @@ describe("TasksPage", () => {
     ]);
 
     setTaskDoneStateMock.mockImplementation(async (taskId: string, isDone: boolean) => ({
-      id: taskId,
-      title: "Mise a jour",
-      due_at: null,
-      is_done: isDone,
-      category_id: null,
-      created_at: "2026-03-16",
-      category: null,
+      task: {
+        id: taskId,
+        title: "Mise a jour",
+        due_at: null,
+        is_done: isDone,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+      impactApplied: isDone,
     }));
 
     updateTaskMock.mockImplementation(async (taskId: string, payload: { title: string; notes?: string | null; categoryId: string | null; dueDate: string | null }) => ({
@@ -191,7 +194,7 @@ describe("TasksPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Popi n'a pas pu préparer tes catégories. Réessaie dans un instant.");
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     await user.type(screen.getByLabelText("Titre"), "Tache sans categorie");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
@@ -349,7 +352,7 @@ describe("TasksPage", () => {
 
     await screen.findAllByRole("button", { name: "Ajouter une tâche" });
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     await user.type(screen.getByLabelText("Titre"), "Reviser");
     await user.selectOptions(screen.getByLabelText("Catégorie (optionnel)"), "c-2");
     await user.type(screen.getByLabelText("Date (optionnel)"), futureDate);
@@ -567,7 +570,7 @@ describe("TasksPage", () => {
 
     await screen.findAllByRole("button", { name: "Ajouter une tâche" });
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     await user.type(screen.getByLabelText("Titre"), "   ");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
 
@@ -588,7 +591,7 @@ describe("TasksPage", () => {
 
     await screen.findAllByRole("button", { name: "Ajouter une tâche" });
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     const titleInput = screen.getByLabelText("Titre");
     await user.type(titleInput, "Acheter pain");
     await user.click(screen.getByRole("button", { name: "Ajouter" }));
@@ -622,7 +625,7 @@ describe("TasksPage", () => {
 
     await screen.findAllByRole("button", { name: "Ajouter une tâche" });
 
-    await user.click(screen.getAllByRole("button", { name: "Ajouter une tâche" })[0]);
+    await user.click((await screen.findAllByRole("button", { name: "Ajouter une tâche" }))[0]);
     expect(screen.getByText("Popi n'arrive pas à charger les catégories pour le moment.")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Titre"), "Course rapide");
@@ -771,13 +774,16 @@ describe("TasksPage", () => {
     ]);
 
     setTaskDoneStateMock.mockResolvedValueOnce({
-      id: "t-9",
-      title: "Tache a faire",
-      due_at: "2026-03-17",
-      is_done: true,
-      category_id: null,
-      created_at: "2026-03-16",
-      category: null,
+      task: {
+        id: "t-9",
+        title: "Tache a faire",
+        due_at: "2026-03-17",
+        is_done: true,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+      impactApplied: true,
     });
 
     render(
@@ -794,7 +800,7 @@ describe("TasksPage", () => {
       expect(setTaskDoneStateMock).toHaveBeenCalledWith("t-9", true);
     });
 
-    expect(await screen.findByText("Youpi, Mimio coche cette tâche comme faite !")).toBeInTheDocument();
+    expect(await screen.findByText("Petit pas, grands effets.")).toBeInTheDocument();
   });
 
   it("updates done state when unchecking a done task", async () => {
@@ -813,13 +819,16 @@ describe("TasksPage", () => {
     ]);
 
     setTaskDoneStateMock.mockResolvedValueOnce({
-      id: "t-10",
-      title: "Tache deja faite",
-      due_at: "2026-03-17",
-      is_done: false,
-      category_id: null,
-      created_at: "2026-03-16",
-      category: null,
+      task: {
+        id: "t-10",
+        title: "Tache deja faite",
+        due_at: "2026-03-17",
+        is_done: false,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+      impactApplied: false,
     });
 
     render(
@@ -872,7 +881,7 @@ describe("TasksPage", () => {
       expect(setTaskDoneStateMock).toHaveBeenCalledWith("t-11", true);
     });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Popi n'a pas réussi à mettre à jour la tâche. Réessaie.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Impossible de mettre à jour tes statuts. Réessaie.");
 
     await waitFor(() => {
       expect(screen.getByRole("checkbox", { name: 'Marquer "Tache fragile" comme faite' })).not.toBeChecked();
@@ -895,13 +904,16 @@ describe("TasksPage", () => {
     ]);
 
     let resolveUpdate!: (value: {
-      id: string;
-      title: string;
-      due_at: string | null;
-      is_done: boolean;
-      category_id: string | null;
-      created_at: string;
-      category: null;
+      task: {
+        id: string;
+        title: string;
+        due_at: string | null;
+        is_done: boolean;
+        category_id: string | null;
+        created_at: string;
+        category: null;
+      };
+      impactApplied: boolean;
     }) => void;
 
     setTaskDoneStateMock.mockImplementationOnce(
@@ -928,13 +940,16 @@ describe("TasksPage", () => {
     expect(setTaskDoneStateMock).toHaveBeenCalledTimes(1);
 
     resolveUpdate({
-      id: "t-12",
-      title: "Tache anti spam",
-      due_at: null,
-      is_done: true,
-      category_id: null,
-      created_at: "2026-03-16",
-      category: null,
+      task: {
+        id: "t-12",
+        title: "Tache anti spam",
+        due_at: null,
+        is_done: true,
+        category_id: null,
+        created_at: "2026-03-16",
+        category: null,
+      },
+      impactApplied: true,
     });
 
     await waitFor(() => {
