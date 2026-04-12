@@ -9,6 +9,23 @@
   box-shadow: 0 10px 18px rgba(46, 47, 47, 0.08);
 }
 
+.status-card--link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+
+.status-card--link:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 12px 20px rgba(46, 47, 47, 0.14);
+}
+
+.status-card--link:focus-visible {
+  outline: 3px solid rgba(111, 167, 246, 0.7);
+  outline-offset: 2px;
+}
+
 .status-card__header {
   display: flex;
   align-items: start;

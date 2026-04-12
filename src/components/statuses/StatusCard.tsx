@@ -1,4 +1,5 @@
 import { getStatusLevel, type StatusDefinition } from "../../types/statuses";
+import { Link } from "react-router-dom";
 import "./StatusCard.css";
 
 type StatusCardProps = {
@@ -37,7 +38,12 @@ export function StatusCard({ definition, value }: StatusCardProps) {
   const progressLabel = value === null ? "Non disponible" : `${value} sur 100`;
 
   return (
-    <article className="status-card" aria-labelledby={`status-card-${definition.key}-title`}>
+    <Link
+      to={`/statuses/${definition.key}`}
+      className="status-card status-card--link"
+      aria-labelledby={`status-card-${definition.key}-title`}
+      aria-label={`Ouvrir le detail du statut ${definition.label}`}
+    >
       <div className="status-card__header">
         <div>
           <p className="status-card__eyebrow">Statut</p>
@@ -66,6 +72,6 @@ export function StatusCard({ definition, value }: StatusCardProps) {
           <dd>{formatStatusLevel(value)}</dd>
         </div>
       </dl>
-    </article>
+    </Link>
   );
 }
