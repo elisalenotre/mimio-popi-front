@@ -1,119 +1,203 @@
-# React + TypeScript + Vite
+# mimio-popi-front
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Application web de suivi de tâches et de statuts, construite avec React, TypeScript, Vite et Supabase.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Stack technique
 
-## React Compiler
+| Catégorie | Technologie |
+|---|---|
+| Framework UI | React 19 + TypeScript |
+| Bundler | Vite 7 |
+| Routage | React Router v7 |
+| Backend / Auth | Supabase (PostgreSQL + Auth) |
+| Tests | Vitest + Testing Library + jsdom |
+| Déploiement | Vercel |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Prérequis
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Node.js** >= 22.x
+- **npm** >= 10.x
+- Un projet **Supabase** actif
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# Cloner le dépôt
+git clone <url-du-repo>
+cd mimio-popi-front
+
+# Installer les dépendances
+npm ci
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Variables d'environnement
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Copier le fichier d'exemple et renseigner les valeurs :
+
+```bash
+cp .env.example .env
 ```
 
-## Deploy on Vercel
+| Variable | Description |
+|---|---|
+| `VITE_SUPABASE_URL` | URL de votre projet Supabase |
+| `VITE_SUPABASE_ANON_KEY` | Clé publique (anon) de votre projet Supabase |
+| `VITE_SITE_URL` | URL publique de l'application (ex : `https://mimio-popi.vercel.app`) |
 
-This project is configured for Vercel with:
+> Ces variables sont exposées côté client via Vite. Ne pas y mettre de secrets sensibles.
 
-- `vercel.json` for build/output settings and SPA fallback routing.
-- `.env.example` to document required environment variables.
+---
 
-### Required environment variables
+## Scripts disponibles
 
-Set these in Vercel Project Settings > Environment Variables:
+```bash
+# Démarrer le serveur de développement (http://localhost:5173)
+npm run dev
+
+# Compiler pour la production
+npm run build
+
+# Prévisualiser le build de production en local
+npm run preview
+
+# Linter (ESLint)
+npm run lint
+
+# Lancer les tests une seule fois
+npm run test
+
+# Lancer les tests en mode watch
+npm run test:watch
+
+# Lancer les tests avec l'interface graphique Vitest
+npm run test:ui
+```
+
+---
+
+## Structure du projet
+
+```
+src/
+├── assets/          # Polices et icônes
+├── components/      # Composants partagés (navbar, statuts, tâches, guards)
+├── contexts/        # Contextes React (AuthContext)
+├── lib/             # Client Supabase
+├── pages/
+│   ├── auth/        # Inscription, connexion, callback, mot de passe oublié/reset
+│   ├── params/      # Onboarding, paramètres du profil
+│   ├── room/        # Page Room
+│   ├── statuses/    # Liste des statuts, détail d'un statut
+│   └── tasks/       # Liste des tâches
+├── services/        # Logique métier (auth, profil, tâches, statuts, validation)
+├── test/            # Configuration des tests (setupTests.ts)
+└── types/           # Types TypeScript partagés
+```
+
+---
+
+## Routes de l'application
+
+### Pages publiques
+
+| Route | Description |
+|---|---|
+| `/signup` | Inscription |
+| `/login` | Connexion |
+| `/auth/callback` | Callback OAuth / magic link Supabase |
+| `/forgot-password` | Demande de réinitialisation de mot de passe |
+| `/reset-password` | Réinitialisation du mot de passe |
+| `/privacy` | Politique de confidentialité |
+
+### Pages protégées (authentification requise)
+
+| Route | Description |
+|---|---|
+| `/onboarding` | Étape d'onboarding obligatoire à la première connexion |
+
+### Pages protégées (authentification + onboarding requis)
+
+| Route | Description |
+|---|---|
+| `/` | Tableau de bord des statuts |
+| `/tasks` | Gestion des tâches |
+| `/statuses/:statusKey` | Détail d'un statut |
+| `/room` | Page Room |
+
+> Les pages protégées redirigent vers `/login` si l'utilisateur n'est pas connecté, et vers `/onboarding` si le profil n'est pas encore configuré.
+
+---
+
+## Tests
+
+Les tests utilisent **Vitest** avec **jsdom** et **@testing-library/react**.
+
+```bash
+npm run test
+```
+
+Les fichiers de test (`*.test.ts` / `*.test.tsx`) sont colocalisés avec les fichiers source qu'ils couvrent.
+
+---
+
+## Déploiement sur Vercel
+
+Le projet est préconfiguré pour Vercel (`vercel.json`) avec :
+- `npm ci` comme commande d'installation
+- `npm run build` comme commande de build
+- `dist/` comme répertoire de sortie
+- Fallback SPA : toutes les routes renvoient vers `index.html`
+
+### Variables d'environnement Vercel
+
+Dans **Vercel Project Settings > Environment Variables**, ajouter :
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
-- `VITE_SITE_URL` (example: `https://mimio-popi.vercel.app`)
+- `VITE_SITE_URL` → `https://mimio-popi.vercel.app`
 
-### Supabase Auth redirect configuration (important)
+### Configuration Supabase Auth
 
-In Supabase Dashboard > Authentication > URL Configuration:
+Dans **Supabase Dashboard > Authentication > URL Configuration** :
 
-- **Site URL**: `https://mimio-popi.vercel.app`
-- **Redirect URLs** (add all needed):
-  - `https://mimio-popi.vercel.app/auth/callback`
-  - `http://localhost:5173/auth/callback`
+| Champ | Valeur |
+|---|---|
+| Site URL | `https://mimio-popi.vercel.app` |
+| Redirect URLs | `https://mimio-popi.vercel.app/auth/callback` |
+| Redirect URLs (local) | `http://localhost:5173/auth/callback` |
 
-If you use Vercel preview deployments, also add:
+Pour les **preview deployments Vercel**, ajouter également :
 
 - `https://*-mimio-popi.vercel.app/auth/callback`
 
-### Local setup
+---
+
+## Développement local
 
 ```bash
-cp .env.example .env.local
+# 1. Installer les dépendances
+npm ci
+
+# 2. Configurer les variables d'environnement
+cp .env.example .env
+# Remplir VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY
+
+# 3. Lancer le serveur de développement
+npm run dev
+# → http://localhost:5173
 ```
 
-Then fill `.env.local` with your Supabase values.
+---
 
-### Build command
+## Licence
 
-```bash
-npm run build
-```
+Projet privé — tous droits réservés.
 
-### Notes
-
-- The app uses `BrowserRouter`, so the SPA fallback in `vercel.json` is required to avoid 404 on page refresh for routes like `/login`, `/settings`, etc.
