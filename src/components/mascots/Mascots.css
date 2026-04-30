@@ -1,0 +1,40 @@
+/* ── Base ── */
+.mascots {
+  display: block;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* ── Variants ── */
+.mascots--default {
+  width: clamp(80px, 12vw, 150px);
+}
+
+.mascots--compact {
+  width: clamp(48px, 8vw, 72px);
+}
+
+/* ── Positions ── */
+.mascots--card {
+  margin: 0 auto;
+}
+
+.mascots--header {
+  /* Flows in document order, no extra positioning needed */
+}
+
+.mascots--corner {
+  /* Corner positioning is handled by the wrapping container in each page */
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .mascots--default {
+    width: clamp(56px, 12vw, 80px);
+  }
+
+  .mascots--compact {
+    width: clamp(36px, 7vw, 52px);
+  }
+}
