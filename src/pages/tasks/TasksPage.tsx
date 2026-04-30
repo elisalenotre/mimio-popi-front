@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { TaskForm } from "../../components/tasks/TaskForm";
 import { TaskList } from "../../components/tasks/TaskList";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
+import { Mascots } from "../../components/mascots/Mascots";
 import { useOptionalAuth } from "../../contexts/AuthContext";
 import {
   createTask,
@@ -14,7 +15,6 @@ import {
 } from "../../services/task/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
 import { StatusMiniPanel } from "../../components/statuses/StatusMiniPanel";
-import happyMascot from "../../assets/popi-mimio-very-happy.svg";
 import plusIcon from "../../assets/icons/Plus.svg";
 import "./TasksPage.css";
 
@@ -476,7 +476,7 @@ export default function TasksPage() {
             </p>
           )}
 
-          <img className="tasks-mascot" src={happyMascot} alt="Mimio et Popi tres heureux" />
+          <Mascots variant="default" position="corner" className="tasks-mascot" />
           <button
             type="button"
             className="task-add-mascot-button"

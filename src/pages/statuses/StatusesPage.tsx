@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
+import { Mascots } from "../../components/mascots/Mascots";
 import { StatusCard } from "../../components/statuses/StatusCard";
 import { getMyStatuses } from "../../services/status/statusService";
 import { STATUS_DEFINITIONS, getStatusDayKey, type UserStatuses } from "../../types/statuses";
@@ -83,6 +84,7 @@ export default function StatusesPage() {
               <Link to="/tasks" className="statuses-page-link-button">
                 Voir mes tâches
               </Link>
+              <Mascots variant="default" position="card" />
             </section>
           </header>
 
