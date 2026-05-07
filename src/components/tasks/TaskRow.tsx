@@ -4,16 +4,9 @@ import type { Task } from "../../types/tasks";
 type TaskRowProps = {
   task: Task;
   isUpdating: boolean;
-  isDraggable?: boolean;
-  isDragging?: boolean;
-  isDropTarget?: boolean;
   onToggleDone: (task: Task, nextDone: boolean) => void;
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (task: Task) => void;
-  onDragStart?: () => void;
-  onDragOver?: (event: React.DragEvent<HTMLLIElement>) => void;
-  onDrop?: (event: React.DragEvent<HTMLLIElement>) => void;
-  onDragEnd?: () => void;
 };
 
 function parseDate(dateIso: string) {
@@ -74,16 +67,9 @@ function getRelativeDueLabel(dateIso: string | null) {
 export function TaskRow({
   task,
   isUpdating,
-  isDraggable = false,
-  isDragging = false,
-  isDropTarget = false,
   onToggleDone,
   onEditTask,
   onDeleteTask,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
 }: TaskRowProps) {
   const dueLabel = getRelativeDueLabel(task.due_at);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
@@ -132,21 +118,7 @@ export function TaskRow({
 
   return (
     <li
-      className={`task-row${task.is_done ? " task-row--done" : ""}${isUpdating ? " task-row--updating" : ""}${isDraggable ? " task-row--draggable" : ""}${isDragging ? " task-row--dragging" : ""}${isDropTarget ? " task-row--drop-target" : ""}`}
-      draggable={isDraggable && !isUpdating}
-      onDragStart={(event) => {
-        if (!isDraggable || isUpdating) {
-          event.preventDefault();
-          return;
-        }
-
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", task.id);
-        onDragStart?.();
-      }}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      onDragEnd={onDragEnd}
+      className={`task-row${task.is_done ? " task-row--done" : ""}${isUpdating ? " task-row--updating" : ""}`}
     >
       <label className="task-row__checkbox-wrap">
         <input
@@ -168,12 +140,6 @@ export function TaskRow({
       </div>
 
       <div className="task-row__actions">
-        {isDraggable ? (
-          <span className="task-row__drag-handle" aria-hidden="true">
-            ::
-          </span>
-        ) : null}
-
         <div className="task-row__menu-wrap" ref={actionsMenuRef}>
           <button
             type="button"

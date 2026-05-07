@@ -18,35 +18,6 @@ import { StatusMiniPanel } from "../../components/statuses/StatusMiniPanel";
 import plusIcon from "../../assets/icons/Plus.svg";
 import "./TasksPage.css";
 
-const TASK_ORDER_STORAGE_PREFIX = "mimio-popi-task-order:";
-
-function getSortableDueTime(dateIso: string | null) {
-  if (!dateIso) return Number.POSITIVE_INFINITY;
-
-  const raw = dateIso.trim();
-  if (!raw) return Number.POSITIVE_INFINITY;
-
-  const parsedValue = raw.includes("T") ? raw : `${raw}T00:00:00`;
-  const date = new Date(parsedValue);
-
-  if (Number.isNaN(date.getTime())) {
-    return Number.POSITIVE_INFINITY;
-  }
-
-  return date.getTime();
-}
-
-function sortTodoTasks(a: Task, b: Task) {
-  const dueA = getSortableDueTime(a.due_at);
-  const dueB = getSortableDueTime(b.due_at);
-
-  if (dueA !== dueB) {
-    return dueA - dueB;
-  }
-
-  return b.created_at.localeCompare(a.created_at);
-}
-
 function splitDueInputValue(dateIso: string | null) {
   if (!dateIso) {
     return { date: "", time: "" };
@@ -66,59 +37,6 @@ function splitDueInputValue(dateIso: string | null) {
     date: datePart.slice(0, 10),
     time: /^\d{2}:\d{2}/.test(timePart) ? timePart.slice(0, 5) : "",
   };
-}
-
-function getTaskOrderStorageKey(userId: string | undefined) {
-  return `${TASK_ORDER_STORAGE_PREFIX}${userId ?? "anonymous"}`;
-}
-
-function readStoredTodoOrder(storageKey: string) {
-  if (typeof window === "undefined") {
-    return [] as string[];
-  }
-
-  try {
-    const rawValue = window.localStorage.getItem(storageKey);
-    if (!rawValue) {
-      return [] as string[];
-    }
-
-    const parsedValue = JSON.parse(rawValue);
-    return Array.isArray(parsedValue) ? parsedValue.filter((value): value is string => typeof value === "string") : [];
-  } catch {
-    return [] as string[];
-  }
-}
-
-function mergeTodoOrder(tasks: Task[], currentOrder: string[]) {
-  const todoTasks = tasks.filter((task) => !task.is_done);
-  const todoIds = new Set(todoTasks.map((task) => task.id));
-  const persistedIds = currentOrder.filter((taskId) => todoIds.has(taskId));
-  const persistedIdSet = new Set(persistedIds);
-  const remainingIds = todoTasks
-    .filter((task) => !persistedIdSet.has(task.id))
-    .sort(sortTodoTasks)
-    .map((task) => task.id);
-
-  return [...persistedIds, ...remainingIds];
-}
-
-function reorderTaskIds(taskIds: string[], draggedTaskId: string, targetTaskId: string) {
-  if (draggedTaskId === targetTaskId) {
-    return taskIds;
-  }
-
-  const nextOrder = [...taskIds];
-  const draggedIndex = nextOrder.indexOf(draggedTaskId);
-  const targetIndex = nextOrder.indexOf(targetTaskId);
-
-  if (draggedIndex === -1 || targetIndex === -1) {
-    return taskIds;
-  }
-
-  nextOrder.splice(draggedIndex, 1);
-  nextOrder.splice(targetIndex, 0, draggedTaskId);
-  return nextOrder;
 }
 
 function toDateInputValue(dateIso: string | null) {
@@ -154,9 +72,6 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [taskPendingDelete, setTaskPendingDelete] = useState<Task | null>(null);
   const [showMascotHint, setShowMascotHint] = useState(true);
-  const [todoOrderIds, setTodoOrderIds] = useState<string[]>([]);
-  const [hasLoadedTodoOrder, setHasLoadedTodoOrder] = useState(false);
-
   const [categoriesAvailable, setCategoriesAvailable] = useState(true);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -176,8 +91,6 @@ export default function TasksPage() {
   const pseudoFromEmail = auth?.user?.email ? auth.user.email.split("@")[0] : null;
   const pseudo = normalizePseudo(pseudoFromMetadata ?? pseudoFromEmail);
   const bubblePseudoSuffix = pseudo ? `${pseudo}` : "";
-  const taskOrderStorageKey = getTaskOrderStorageKey(auth?.user?.id);
-
   const loadTaskData = async () => {
     setLoading(true);
     setLoadingError(null);
@@ -238,26 +151,6 @@ export default function TasksPage() {
 
     return () => window.clearInterval(timer);
   }, []);
-
-  useEffect(() => {
-    setTodoOrderIds(readStoredTodoOrder(taskOrderStorageKey));
-    setHasLoadedTodoOrder(true);
-  }, [taskOrderStorageKey]);
-
-  useEffect(() => {
-    if (!hasLoadedTodoOrder || loading || typeof window === "undefined") {
-      return;
-    }
-
-    const nextOrder = mergeTodoOrder(tasks, todoOrderIds);
-
-    if (nextOrder.length !== todoOrderIds.length || nextOrder.some((taskId, index) => taskId !== todoOrderIds[index])) {
-      setTodoOrderIds(nextOrder);
-      return;
-    }
-
-    window.localStorage.setItem(taskOrderStorageKey, JSON.stringify(nextOrder));
-  }, [hasLoadedTodoOrder, loading, taskOrderStorageKey, tasks, todoOrderIds]);
 
   const dayLabel = new Intl.DateTimeFormat("fr-FR", {
     weekday: "long",
@@ -360,21 +253,6 @@ export default function TasksPage() {
     setError(null);
     setSuccess(null);
     setEditingTask(task);
-  };
-
-  const handleReorderTodoTasks = (draggedTaskId: string, targetTaskId: string) => {
-    setTodoOrderIds((current) => {
-      const nextBaseOrder = mergeTodoOrder(tasks, current);
-      const nextOrder = reorderTaskIds(nextBaseOrder, draggedTaskId, targetTaskId);
-
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem(taskOrderStorageKey, JSON.stringify(nextOrder));
-      }
-
-      return nextOrder;
-    });
-    setSuccess("Mimio a réorganisé tes tâches à faire.");
-    setError(null);
   };
 
   const handleRequestDeleteTask = (task: Task) => {
@@ -504,7 +382,6 @@ export default function TasksPage() {
 
         <TaskList
           tasks={tasks}
-          todoOrderIds={todoOrderIds}
           updatingTaskIds={Array.from(new Set([...updatingTaskIds, ...deletingTaskIds]))}
           onAddTask={() => {
             setShowMascotHint(false);
@@ -513,7 +390,6 @@ export default function TasksPage() {
           onToggleDone={handleToggleDone}
           onEditTask={handleEditTask}
           onDeleteTask={handleRequestDeleteTask}
-          onReorderTodoTasks={handleReorderTodoTasks}
         />
 
         {isClockVisible ? (
