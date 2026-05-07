@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { TaskForm } from "../../components/tasks/TaskForm";
 import { TaskList } from "../../components/tasks/TaskList";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
@@ -15,6 +15,8 @@ import {
 } from "../../services/task/taskService";
 import type { CreateTaskInput, Task, TaskCategory } from "../../types/tasks";
 import { StatusMiniPanel } from "../../components/statuses/StatusMiniPanel";
+import { getMyStatuses } from "../../services/status/statusService";
+import { STATUS_DEFINITIONS, clampStatusValue, type UserStatuses } from "../../types/statuses";
 import plusIcon from "../../assets/icons/Plus.svg";
 import "./TasksPage.css";
 
@@ -162,6 +164,10 @@ export default function TasksPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [statusRefreshToken, setStatusRefreshToken] = useState(0);
+  const [isForecastOpen, setIsForecastOpen] = useState(false);
+  const [forecastLoading, setForecastLoading] = useState(false);
+  const [forecastError, setForecastError] = useState<string | null>(null);
+  const [forecastBaseStatuses, setForecastBaseStatuses] = useState<UserStatuses | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [isClockVisible, setIsClockVisible] = useState(true);
 
@@ -269,6 +275,65 @@ export default function TasksPage() {
     hour: "2-digit",
     minute: "2-digit",
   }).format(now);
+
+  const todoTasks = useMemo(() => tasks.filter((task) => !task.is_done), [tasks]);
+
+  const loadForecastBaseStatuses = useCallback(async () => {
+    setForecastLoading(true);
+    setForecastError(null);
+
+    try {
+      const statuses = await getMyStatuses();
+      setForecastBaseStatuses(statuses);
+    } catch {
+      setForecastError("Popi n'arrive pas à charger la base des statuts prévisionnels pour le moment.");
+    } finally {
+      setForecastLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isForecastOpen) {
+      return;
+    }
+
+    void loadForecastBaseStatuses();
+  }, [isForecastOpen, statusRefreshToken, loadForecastBaseStatuses]);
+
+  const projectedRows = useMemo(
+    () =>
+      STATUS_DEFINITIONS.map((definition) => {
+        const key = definition.key;
+        const currentValue = forecastBaseStatuses?.[key] ?? null;
+        const delta = todoTasks.reduce((sum, task) => sum + (task.impact[key] ?? 0), 0);
+        const projectedValue = currentValue === null ? null : clampStatusValue(currentValue + delta);
+
+        return {
+          key,
+          label: definition.label,
+          accentColor: definition.accentColor,
+          currentValue,
+          delta,
+          projectedValue,
+        };
+      }),
+    [forecastBaseStatuses, todoTasks]
+  );
+
+  const forecastSummaryLabel =
+    todoTasks.length === 0
+      ? "Tu n'as pas de tâche à faire pour la projection."
+      : `Projection si tu termines tes ${todoTasks.length} tâche${todoTasks.length > 1 ? "s" : ""} à faire.`;
+
+  const handleToggleForecast = () => {
+    setIsForecastOpen((current) => {
+      const next = !current;
+      if (next) {
+        void loadForecastBaseStatuses();
+      }
+      return next;
+    });
+  };
 
   const handleCreateTask = async (payload: CreateTaskInput) => {
     setError(null);
@@ -465,6 +530,63 @@ export default function TasksPage() {
 
         <aside className="tasks-page-status" aria-label="Aperçu statuts">
           <StatusMiniPanel refreshToken={statusRefreshToken} />
+
+          <div className="tasks-forecast">
+            <button
+              type="button"
+              className="tasks-forecast__toggle"
+              onClick={handleToggleForecast}
+              aria-expanded={isForecastOpen}
+            >
+              {isForecastOpen ? "Masquer le prévisionnel" : "Voir mes statuts prévisionnels"}
+            </button>
+
+            {isForecastOpen && (
+              <section className="tasks-forecast__panel" aria-label="Statuts prévisionnels">
+                <p className="tasks-forecast__summary">{forecastSummaryLabel}</p>
+
+                {forecastLoading ? (
+                  <p className="tasks-forecast__loading">Popi calcule ton aperçu prévisionnel...</p>
+                ) : forecastError ? (
+                  <p className="tasks-forecast__error" role="alert">{forecastError}</p>
+                ) : (
+                  <div className="tasks-forecast__list">
+                    {projectedRows.map((row) => {
+                      const deltaLabel = `${row.delta > 0 ? "+" : ""}${row.delta}`;
+                      const projectedLabel = row.projectedValue === null ? "—" : `${row.projectedValue}`;
+
+                      return (
+                        <div key={row.key} className="tasks-forecast__row">
+                          <div className="tasks-forecast__row-label">{row.label}</div>
+                          <div className="tasks-forecast__row-values">
+                            <span className="tasks-forecast__value-current">Actuel: {row.currentValue ?? "—"}</span>
+                            <span
+                              className={`tasks-forecast__value-delta${
+                                row.delta > 0
+                                  ? " tasks-forecast__value-delta--positive"
+                                  : row.delta < 0
+                                    ? " tasks-forecast__value-delta--negative"
+                                    : ""
+                              }`}
+                            >
+                              Delta: {deltaLabel}
+                            </span>
+                            <span className="tasks-forecast__value-next">Prévision: {projectedLabel}</span>
+                          </div>
+                          <div className="tasks-forecast__bar" aria-hidden="true">
+                            <div
+                              className="tasks-forecast__bar-fill"
+                              style={{ width: `${row.projectedValue ?? 0}%`, backgroundColor: row.accentColor }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            )}
+          </div>
         </aside>
 
         <main className="tasks-page-main" aria-label="Bloc liste des tâches">

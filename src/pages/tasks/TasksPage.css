@@ -63,6 +63,94 @@
   opacity: 0.8;
 }
 
+.tasks-forecast {
+  margin-top: 0.65rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.tasks-forecast__toggle {
+  width: 100%;
+  justify-content: center;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.88rem;
+}
+
+.tasks-forecast__panel {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.7rem;
+  border: 2px dashed rgba(46, 47, 47, 0.25);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.tasks-forecast__summary,
+.tasks-forecast__loading,
+.tasks-forecast__error {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.tasks-forecast__loading {
+  opacity: 0.82;
+}
+
+.tasks-forecast__error {
+  color: #b7342a;
+  font-weight: 600;
+}
+
+.tasks-forecast__list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.tasks-forecast__row {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.tasks-forecast__row-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.tasks-forecast__row-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+.tasks-forecast__value-current,
+.tasks-forecast__value-next,
+.tasks-forecast__value-delta {
+  font-variant-numeric: tabular-nums;
+}
+
+.tasks-forecast__value-delta--positive {
+  color: #1d7a2d;
+}
+
+.tasks-forecast__value-delta--negative {
+  color: #b7342a;
+}
+
+.tasks-forecast__bar {
+  overflow: hidden;
+  height: 7px;
+  border: 1.5px solid rgba(46, 47, 47, 0.2);
+  border-radius: 999px;
+  background: rgba(46, 47, 47, 0.08);
+}
+
+.tasks-forecast__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 220ms ease-out;
+}
+
 .tasks-main-title {
   margin: 0 0 0.8rem;
   padding-bottom: 0.55rem;
