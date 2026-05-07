@@ -155,17 +155,18 @@
 .task-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 90;
   background: rgba(46, 47, 47, 0.45);
   display: grid;
   place-items: center;
-  padding: 1rem;
+  padding: 1rem 1rem calc(var(--app-navbar-height, 0px) + var(--app-navbar-bottom-offset, 0px) + 1.25rem);
 }
 
 .task-modal {
   width: min(700px, 96vw);
-  max-height: min(88vh, 860px);
+  max-height: min(calc(100vh - var(--app-navbar-height, 0px) - var(--app-navbar-bottom-offset, 0px) - 2.5rem), 860px);
   overflow: auto;
+  transform: translateY(25px);
   background-color: #fffde8;
   background-image: linear-gradient(180deg, #fffde8 0%, #eef8ff 100%);
   border: 2px solid var(--ink);
@@ -378,6 +379,15 @@
 
   .task-impact-estimate__item {
     font-size: 0.84rem;
+  }
+
+  .task-modal-overlay {
+    padding: 0.85rem 0.75rem calc(var(--app-navbar-height, 0px) + var(--app-navbar-bottom-offset, 0px) + 0.9rem);
+  }
+
+  .task-modal {
+    width: min(700px, 100%);
+    transform: translateY(-4px);
   }
 }
 
