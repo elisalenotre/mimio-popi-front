@@ -74,10 +74,16 @@
   border: 2px solid rgba(46, 47, 47, 0.2);
   border-radius: 10px;
   background: #fffffb;
+  position: relative;
+  overflow: visible;
 }
 
 .task-row--updating {
   opacity: 0.7;
+}
+
+.task-row--menu-open {
+  z-index: 30;
 }
 
 .task-row__checkbox-wrap {
@@ -135,6 +141,7 @@
 
 .task-row__menu-wrap {
   position: relative;
+  z-index: 4;
 }
 
 .task-row__menu {
@@ -147,7 +154,7 @@
   position: absolute;
   top: calc(100% + 0.3rem);
   right: 0;
-  z-index: 3;
+  z-index: 10;
   min-width: 135px;
   display: grid;
   gap: 0.25rem;
@@ -196,5 +203,10 @@
   .task-row__actions {
     grid-column: 1 / -1;
     justify-content: flex-end;
+  }
+
+  .task-row__menu-panel {
+    right: 0;
+    left: auto;
   }
 }

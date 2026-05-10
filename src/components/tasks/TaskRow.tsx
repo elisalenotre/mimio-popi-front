@@ -118,7 +118,7 @@ export function TaskRow({
 
   return (
     <li
-      className={`task-row${task.is_done ? " task-row--done" : ""}${isUpdating ? " task-row--updating" : ""}`}
+      className={`task-row${task.is_done ? " task-row--done" : ""}${isUpdating ? " task-row--updating" : ""}${isActionsMenuOpen ? " task-row--menu-open" : ""}`}
     >
       <label className="task-row__checkbox-wrap">
         <input
@@ -155,16 +155,18 @@ export function TaskRow({
 
           {isActionsMenuOpen && (
             <div className="task-row__menu-panel" role="menu" aria-label={`Menu actions ${task.title}`}>
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setIsActionsMenuOpen(false);
-                  onEditTask?.(task);
-                }}
-              >
-                Éditer
-              </button>
+              {!task.is_done && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsActionsMenuOpen(false);
+                    onEditTask?.(task);
+                  }}
+                >
+                  Éditer
+                </button>
+              )}
               <button
                 type="button"
                 role="menuitem"
