@@ -10,7 +10,7 @@ import "./AppNavbar.css";
 
 const navItems = [
   { to: "/tasks", label: "Tâches", icon: listIcon, ariaLabel: "Aller aux tâches" },
-  { to: "/", label: "Statuts", icon: heartIcon, ariaLabel: "Aller aux statuts", end: true },
+  { to: "/statuses", label: "Statuts", icon: heartIcon, ariaLabel: "Aller aux statuts", end: true },
   { to: "/room", label: "Chambre", icon: roomIcon, ariaLabel: "Aller à la chambre" },
   { to: "/settings", label: "Paramètres", icon: settingsIcon, ariaLabel: "Aller aux paramètres" },
 ];

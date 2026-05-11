@@ -86,7 +86,7 @@ export function StatusMiniPanel({ refreshToken = 0 }: StatusMiniPanelProps) {
     <div className="status-mini-panel">
       <div className="status-mini-panel__header">
         <h3>Mes statuts</h3>
-        <Link to="/" className="status-mini-panel__link" aria-label="Voir mes statuts en détail">
+        <Link to="/statuses" className="status-mini-panel__link" aria-label="Voir mes statuts en détail">
           Tout voir
         </Link>
       </div>

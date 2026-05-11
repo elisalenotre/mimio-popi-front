@@ -58,7 +58,7 @@ export default function AuthCallbackPage() {
       if (!active) return;
 
       if (data.session) {
-        navigate("/", { replace: true });
+        navigate("/tasks", { replace: true });
       } else {
         navigate("/login", { replace: true });
       }

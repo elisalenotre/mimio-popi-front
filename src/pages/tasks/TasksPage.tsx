@@ -4,6 +4,7 @@ import { TaskList } from "../../components/tasks/TaskList";
 import { AppNavbar } from "../../components/navbar/AppNavbar";
 import { Mascots } from "../../components/mascots/Mascots";
 import { useOptionalAuth } from "../../contexts/AuthContext";
+import { getMyProfile } from "../../services/profile/profileService";
 import {
   createTask,
   deleteTask,
@@ -79,6 +80,7 @@ export default function TasksPage() {
   const [statusRefreshToken, setStatusRefreshToken] = useState(0);
   const [now, setNow] = useState(() => new Date());
   const [isClockVisible, setIsClockVisible] = useState(true);
+  const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
 
   const userMetadata = auth?.user?.user_metadata as Record<string, unknown> | null | undefined;
   const pseudoFromMetadata =
@@ -89,8 +91,8 @@ export default function TasksPage() {
     null;
 
   const pseudoFromEmail = auth?.user?.email ? auth.user.email.split("@")[0] : null;
-  const pseudo = normalizePseudo(pseudoFromMetadata ?? pseudoFromEmail);
-  const bubblePseudoSuffix = pseudo ? `${pseudo}` : "";
+  const pseudo = normalizePseudo(profileDisplayName ?? pseudoFromMetadata ?? pseudoFromEmail);
+  const bubblePseudoSuffix = pseudo ? `, ${pseudo}` : "";
   const loadTaskData = async () => {
     setLoading(true);
     setLoadingError(null);
@@ -105,7 +107,11 @@ export default function TasksPage() {
     }
 
     try {
-      const [tasksResult, categoriesResult] = await Promise.allSettled([getMyTasks(), getMyTaskCategories()]);
+      const [tasksResult, categoriesResult, profileResult] = await Promise.allSettled([
+        getMyTasks(),
+        getMyTaskCategories(),
+        getMyProfile(),
+      ]);
 
       if (tasksResult.status === "fulfilled") {
         setTasks(tasksResult.value);
@@ -120,6 +126,12 @@ export default function TasksPage() {
       } else {
         setCategoriesAvailable(false);
         setCategoriesError("Popi n'arrive pas à charger les catégories pour le moment.");
+      }
+
+      if (profileResult.status === "fulfilled") {
+        setProfileDisplayName(profileResult.value.display_name ?? null);
+      } else {
+        setProfileDisplayName(null);
       }
 
       if (initError) {
@@ -350,7 +362,7 @@ export default function TasksPage() {
         <div className="tasks-mascot-wrap">
           {showMascotHint && (
             <p className="task-help-bubble" role="status" aria-live="polite">
-              Hé, par ici, {bubblePseudoSuffix} ! Clique dans ma main pour créer une tâche !
+              Hé, par ici{bubblePseudoSuffix} ! Clique dans ma main pour créer une tâche !
             </p>
           )}
 

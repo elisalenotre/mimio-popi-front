@@ -11,7 +11,7 @@ export default function RoomPage() {
         <main>
           <h1>Chambre</h1>
           <p className="room-back-link">
-            <Link to="/">
+            <Link to="/tasks">
               <img className="room-back-link__icon" src={backIcon} alt="" aria-hidden="true" />
               Retour aux tâches
             </Link>
