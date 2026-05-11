@@ -34,7 +34,7 @@ describe("StatusesPage", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole("heading", { name: "Tes statuts du moment" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Les statuts" })).toBeInTheDocument();
     expect(screen.getAllByText(/^Statut$/)).toHaveLength(6);
     expect(screen.getByRole("heading", { name: "Fatigue" })).toBeInTheDocument();
     expect(screen.getByLabelText("Valeur Fatigue : 40 sur 100")).toHaveTextContent("40/100");

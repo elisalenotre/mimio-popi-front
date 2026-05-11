@@ -427,7 +427,7 @@ describe("TasksPage", () => {
     });
   });
 
-  it("restores and updates custom todo order from local storage", async () => {
+  it("sorts todo tasks by nearest due date", async () => {
     getMyTasksMock.mockResolvedValueOnce([
       {
         id: "t-order-1",
@@ -449,8 +449,6 @@ describe("TasksPage", () => {
       },
     ]);
 
-    window.localStorage.setItem("mimio-popi-task-order:anonymous", JSON.stringify(["t-order-1", "t-order-2"]));
-
     render(
       <MemoryRouter>
         <TasksPage />
@@ -464,7 +462,7 @@ describe("TasksPage", () => {
         .getByRole("region", { name: "Tâches à faire" })
         .querySelectorAll(".task-row__title");
 
-      expect(Array.from(titlesBefore).map((node) => node.textContent)).toEqual(["Premiere", "Seconde"]);
+      expect(Array.from(titlesBefore).map((node) => node.textContent)).toEqual(["Seconde", "Premiere"]);
     });
   });
 
