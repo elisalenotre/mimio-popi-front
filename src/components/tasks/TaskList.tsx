@@ -5,13 +5,11 @@ import "./TaskList.css";
 
 type TaskListProps = {
   tasks: Task[];
-  todoOrderIds?: string[];
   updatingTaskIds?: string[];
   onAddTask: () => void;
   onToggleDone: (task: Task, nextDone: boolean) => void;
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (task: Task) => void;
-  onReorderTodoTasks?: (draggedTaskId: string, targetTaskId: string) => void;
 };
 
 function getSortableDueTime(dateIso: string | null) {
@@ -43,51 +41,22 @@ function sortTodoTasks(a: Task, b: Task) {
 
 export function TaskList({
   tasks,
-  todoOrderIds = [],
   updatingTaskIds = [],
   onAddTask,
   onToggleDone,
   onEditTask,
   onDeleteTask,
-  onReorderTodoTasks,
 }: TaskListProps) {
   const [showDoneTasks, setShowDoneTasks] = useState(true);
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-  const [dropTargetTaskId, setDropTargetTaskId] = useState<string | null>(null);
 
   const { todoTasks, doneTasks } = useMemo(() => {
-    const todoOrderIndex = new Map(todoOrderIds.map((taskId, index) => [taskId, index]));
-
-    const todos = tasks.filter((task) => !task.is_done).sort((a, b) => {
-      const orderA = todoOrderIndex.get(a.id);
-      const orderB = todoOrderIndex.get(b.id);
-
-      if (orderA !== undefined && orderB !== undefined && orderA !== orderB) {
-        return orderA - orderB;
-      }
-
-      if (orderA !== undefined) {
-        return -1;
-      }
-
-      if (orderB !== undefined) {
-        return 1;
-      }
-
-      return sortTodoTasks(a, b);
-    });
-
+    const todos = tasks.filter((task) => !task.is_done).sort(sortTodoTasks);
     const done = tasks.filter((task) => task.is_done).sort((a, b) => b.created_at.localeCompare(a.created_at));
     return {
       todoTasks: todos,
       doneTasks: done,
     };
-  }, [tasks, todoOrderIds]);
-
-  const clearDragState = () => {
-    setDraggedTaskId(null);
-    setDropTargetTaskId(null);
-  };
+  }, [tasks]);
 
   if (tasks.length === 0) {
     return (
@@ -111,8 +80,6 @@ export function TaskList({
             <span className="task-list-count">{todoTasks.length}</span>
           </div>
 
-          {todoTasks.length > 1 ? <p className="task-list-section__hint">Glisse une tâche pour changer son ordre.</p> : null}
-
           {todoTasks.length === 0 ? (
             <p>Popi dit: aucune tâche à faire.</p>
           ) : (
@@ -122,34 +89,9 @@ export function TaskList({
                   key={task.id}
                   task={task}
                   isUpdating={updatingTaskIds.includes(task.id)}
-                  isDraggable={todoTasks.length > 1 && !updatingTaskIds.includes(task.id)}
-                  isDragging={draggedTaskId === task.id}
-                  isDropTarget={dropTargetTaskId === task.id && draggedTaskId !== task.id}
                   onToggleDone={onToggleDone}
                   onEditTask={onEditTask}
                   onDeleteTask={onDeleteTask}
-                  onDragStart={() => setDraggedTaskId(task.id)}
-                  onDragOver={(event) => {
-                    if (!draggedTaskId || draggedTaskId === task.id) {
-                      return;
-                    }
-
-                    event.preventDefault();
-                    event.dataTransfer.dropEffect = "move";
-                    setDropTargetTaskId(task.id);
-                  }}
-                  onDrop={(event) => {
-                    event.preventDefault();
-
-                    if (!draggedTaskId || draggedTaskId === task.id) {
-                      clearDragState();
-                      return;
-                    }
-
-                    onReorderTodoTasks?.(draggedTaskId, task.id);
-                    clearDragState();
-                  }}
-                  onDragEnd={clearDragState}
                 />
               ))}
             </ul>

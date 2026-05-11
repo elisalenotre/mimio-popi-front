@@ -96,6 +96,15 @@ export default function App() {
         path="/"
         element={
           <RequireOnboarding>
+            <Navigate to="/tasks" replace />
+          </RequireOnboarding>
+        }
+      />
+
+      <Route
+        path="/statuses"
+        element={
+          <RequireOnboarding>
             <Suspense fallback={<PageLoader />}>
               <StatusesPage />
             </Suspense>

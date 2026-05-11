@@ -65,7 +65,7 @@ export default function OnboardingPage() {
     try {
       setSubmitting(true);
       await skipOnboarding();
-      navigate("/", { replace: true });
+      navigate("/tasks", { replace: true });
     } catch {
       setError("Impossible d’enregistrer pour le moment. Réessaie dans un instant.");
     } finally {

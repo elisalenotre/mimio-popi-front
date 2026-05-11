@@ -32,7 +32,7 @@ export default function LoginPage() {
         setError("Email ou mot de passe incorrect.");
         return;
       }
-      navigate("/", { replace: true });
+      navigate("/tasks", { replace: true });
     } catch {
       setError("Impossible de te connecter pour le moment. Réessaie dans un instant.");
     } finally {

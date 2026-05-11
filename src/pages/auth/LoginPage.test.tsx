@@ -62,7 +62,7 @@ describe("LoginPage", () => {
     await user.click(screen.getByRole("button", { name: "Se connecter" }));
 
     expect(signInWithEmailMock).toHaveBeenCalledWith("test@example.com", "Password123");
-    expect(navigateMock).toHaveBeenCalledWith("/", { replace: true });
+    expect(navigateMock).toHaveBeenCalledWith("/tasks", { replace: true });
   });
 
   it("shows Google auth error when service returns an error", async () => {

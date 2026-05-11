@@ -74,24 +74,16 @@
   border: 2px solid rgba(46, 47, 47, 0.2);
   border-radius: 10px;
   background: #fffffb;
-}
-
-.task-row--draggable {
-  cursor: grab;
-}
-
-.task-row--dragging {
-  opacity: 0.45;
-  cursor: grabbing;
-}
-
-.task-row--drop-target {
-  border-color: rgba(31, 109, 152, 0.65);
-  box-shadow: 0 0 0 3px rgba(186, 222, 252, 0.45);
+  position: relative;
+  overflow: visible;
 }
 
 .task-row--updating {
   opacity: 0.7;
+}
+
+.task-row--menu-open {
+  z-index: 30;
 }
 
 .task-row__checkbox-wrap {
@@ -142,16 +134,6 @@
   gap: 0.25rem;
 }
 
-.task-row__drag-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  color: rgba(46, 47, 47, 0.6);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
 .task-row__actions button {
   padding: 0.42rem 0.65rem;
   font-size: 0.8rem;
@@ -159,6 +141,7 @@
 
 .task-row__menu-wrap {
   position: relative;
+  z-index: 4;
 }
 
 .task-row__menu {
@@ -171,7 +154,7 @@
   position: absolute;
   top: calc(100% + 0.3rem);
   right: 0;
-  z-index: 3;
+  z-index: 10;
   min-width: 135px;
   display: grid;
   gap: 0.25rem;
@@ -220,5 +203,10 @@
   .task-row__actions {
     grid-column: 1 / -1;
     justify-content: flex-end;
+  }
+
+  .task-row__menu-panel {
+    right: 0;
+    left: auto;
   }
 }

@@ -38,7 +38,7 @@ export default function StatusDetailPage() {
   useEffect(() => {
     if (!statusDefinition) {
       const redirectTimeout = window.setTimeout(() => {
-        navigate("/", { replace: true });
+        navigate("/statuses", { replace: true });
       }, 1400);
 
       return () => window.clearTimeout(redirectTimeout);
@@ -78,7 +78,7 @@ export default function StatusDetailPage() {
           <main className="status-detail-page status-detail-page--error" role="alert" aria-live="polite">
             <h1>Statut introuvable</h1>
             <p>Ce statut n'est pas reconnu. Retour aux statuts en cours...</p>
-            <Link to="/" className="status-detail-page__back-link-button">
+            <Link to="/statuses" className="status-detail-page__back-link-button">
               Revenir aux statuts
             </Link>
           </main>
@@ -97,7 +97,7 @@ export default function StatusDetailPage() {
       <div className="status-detail-page-layout">
         <main className="status-detail-page" aria-labelledby="status-detail-title">
           <p className="status-detail-page__back-link">
-            <Link to="/" className="back-home-link">
+            <Link to="/statuses" className="back-home-link">
               <img className="back-home-link__icon" src={backIcon} alt="" aria-hidden="true" />
               Retour aux statuts
             </Link>
@@ -132,7 +132,7 @@ export default function StatusDetailPage() {
           </section>
 
           <section className="status-detail-page__section" aria-labelledby="status-tips-title">
-            <h2 id="status-tips-title">Conseils doux</h2>
+            <h2 id="status-tips-title">Les conseils de Popi</h2>
             <ul className="status-detail-page__tips">
               {selectedTips.slice(0, 5).map((tip) => (
                 <li key={tip}>{tip}</li>

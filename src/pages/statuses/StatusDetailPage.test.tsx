@@ -43,10 +43,8 @@ describe("StatusDetailPage", () => {
     expect(await screen.findByRole("heading", { name: "Stress" })).toBeInTheDocument();
     expect(screen.getByText("72/100")).toBeInTheDocument();
     expect(screen.getByText("Interprétation: Élevé")).toBeInTheDocument();
-    expect(
-      screen.getByText("Le stress reflète la pression ressentie et la charge mentale du moment. Il indique surtout un besoin d'espace, de clarte ou de soutien.")
-    ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Conseils doux" })).toBeInTheDocument();
+    expect(screen.getByText(/Ici, le stress reflète la pression ressentie et la charge mentale du moment\./)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Les conseils de Popi" })).toBeInTheDocument();
   });
 
   it("calcule les niveaux faible, modere et eleve selon la valeur", async () => {
@@ -84,8 +82,8 @@ describe("StatusDetailPage", () => {
     renderStatusDetail("/statuses/fatigue");
 
     expect(await screen.findByRole("heading", { name: "Fatigue" })).toBeInTheDocument();
-    expect(screen.getByText("Prevoir une micro-pause (5 minutes).")).toBeInTheDocument();
-    expect(screen.getByText("Choisir une tache legere.")).toBeInTheDocument();
+    expect(screen.getByText(/Pin Pon Pin Pon ! C'est urgent : prevoir une micro-pause \(5 minutes\)/)).toBeInTheDocument();
+    expect(screen.getByText("Choisit une tache legere dès maintenant.")).toBeInTheDocument();
   });
 
   it("affiche la definition et des conseils generiques quand la valeur est indisponible", async () => {
@@ -103,10 +101,8 @@ describe("StatusDetailPage", () => {
     expect(await screen.findByRole("heading", { name: "Finances" })).toBeInTheDocument();
     expect(screen.getByText("—")).toBeInTheDocument();
     expect(screen.getByText("Impossible de charger la valeur pour le moment.")).toBeInTheDocument();
-    expect(
-      screen.getByText("Les finances refletent ton ressenti sur l'equilibre de ton budget actuel. C'est un indicateur de confort et de charge mentale liee a l'argent.")
-    ).toBeInTheDocument();
-    expect(screen.getByText("Faire un petit point budget en mode bienveillance.")).toBeInTheDocument();
+    expect(screen.getByText(/Les finances reflètent ton ressenti sur l'équilibre de ton budget actuel\./)).toBeInTheDocument();
+    expect(screen.getByText("Faire un petit point budget tranquillement avec Popi.")).toBeInTheDocument();
   });
 
   it("affiche une erreur pour un statut invalide", () => {

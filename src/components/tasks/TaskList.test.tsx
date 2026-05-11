@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TaskList } from "./TaskList";
@@ -62,56 +62,34 @@ describe("TaskList", () => {
     expect(labels).toEqual(["Date proche", "Date plus loin", "Sans date"]);
   });
 
-  it("uses saved todo order before due-date sorting", () => {
+  it("sorts tasks with same due date by most recent creation date", () => {
     const tasks: Task[] = [
-      makeTask({ id: "todo-3", title: "Sans date", due_at: null }),
-      makeTask({ id: "todo-2", title: "Date proche", due_at: "2026-03-17" }),
-      makeTask({ id: "todo-1", title: "Date plus loin", due_at: "2026-03-20" }),
+      makeTask({ id: "todo-1", title: "Plus ancien", due_at: "2026-03-17", created_at: "2026-03-16T09:00:00.000Z" }),
+      makeTask({ id: "todo-2", title: "Plus recent", due_at: "2026-03-17", created_at: "2026-03-16T10:00:00.000Z" }),
     ];
 
-    render(<TaskList tasks={tasks} todoOrderIds={["todo-3", "todo-1", "todo-2"]} onAddTask={vi.fn()} onToggleDone={vi.fn()} />);
+    render(<TaskList tasks={tasks} onAddTask={vi.fn()} onToggleDone={vi.fn()} />);
 
     const todoSection = screen.getByRole("region", { name: "Tâches à faire" });
     const labels = Array.from(todoSection.querySelectorAll(".task-row__title")).map((node) => node.textContent);
 
-    expect(labels).toEqual(["Sans date", "Date plus loin", "Date proche"]);
+    expect(labels).toEqual(["Plus recent", "Plus ancien"]);
   });
 
-  it("calls reorder callback when dropping a task on another", () => {
-    const onReorderTodoTasks = vi.fn();
+  it("hides and shows done tasks when toggling section", async () => {
+    const user = userEvent.setup();
     const tasks: Task[] = [
-      makeTask({ id: "todo-1", title: "Premiere" }),
-      makeTask({ id: "todo-2", title: "Seconde" }),
+      makeTask({ id: "done-1", title: "Tache finie", is_done: true }),
+      makeTask({ id: "todo-1", title: "Tache a faire", is_done: false }),
     ];
 
-    render(
-      <TaskList
-        tasks={tasks}
-        onAddTask={vi.fn()}
-        onToggleDone={vi.fn()}
-        onReorderTodoTasks={onReorderTodoTasks}
-      />
-    );
+    render(<TaskList tasks={tasks} onAddTask={vi.fn()} onToggleDone={vi.fn()} />);
 
-    const draggedRow = screen.getByText("Premiere").closest("li");
-    const targetRow = screen.getByText("Seconde").closest("li");
+    expect(screen.getByText("Tache finie")).toBeInTheDocument();
 
-    if (!draggedRow || !targetRow) {
-      throw new Error("Task rows not found");
-    }
-
-    const dataTransfer = {
-      effectAllowed: "",
-      dropEffect: "",
-      setData: vi.fn(),
-      getData: vi.fn(),
-    };
-
-    fireEvent.dragStart(draggedRow, { dataTransfer });
-    fireEvent.dragOver(targetRow, { dataTransfer });
-    fireEvent.drop(targetRow, { dataTransfer });
-
-    expect(onReorderTodoTasks).toHaveBeenCalledWith("todo-1", "todo-2");
+    await user.click(screen.getByRole("button", { name: "Masquer les tâches faites" }));
+    expect(screen.queryByText("Tache finie")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Afficher les tâches faites" })).toBeInTheDocument();
   });
 
   it("closes task actions menu when pressing Escape", async () => {
