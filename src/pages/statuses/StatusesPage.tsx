@@ -69,18 +69,18 @@ export default function StatusesPage() {
           <header className="statuses-page-hero">
             <div>
               <p className="statuses-page-hero__eyebrow">Tableau de bord</p>
-              <h1>Tes statuts du moment</h1>
+              <h1>Les statuts</h1>
               <p>
-                Un coup d'œil suffit pour voir où tu en es sur tes six repères personnels. 
+                Un coup d'œil suffit pour voir où tu en es sur tes repères personnels. 
               </p>
               <p>
-                Attention à ne dépasser tes limites sur aucun d’entre eux, et n’hésite pas à consulter tes tâches pour faire baisser les niveaux qui sont un peu trop hauts.
+                Attention à ne dépasser tes limites, et n’hésite pas à consulter tes tâches pour faire baisser les niveaux qui sont un peu trop hauts.
             </p>
         </div>
 
             <section className="statuses-page-summary" aria-label="Resume des statuts">
-              <h2>Scan rapide</h2>
-              <p>6 indicateurs, une lecture en quelques secondes, puis un accès direct à tes tâches.</p>
+              <h2>Les statuts en direct</h2>
+              <p>Retourne voir tes indicateurs en direct et consulte tes tâches pour ajuster ta journée.</p>
               <Link to="/tasks" className="statuses-page-link-button">
                 Voir mes tâches
               </Link>
