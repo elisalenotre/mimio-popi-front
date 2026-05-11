@@ -46,7 +46,7 @@ describe("StatusDetailPage", () => {
     expect(
       screen.getByText("Le stress reflète la pression ressentie et la charge mentale du moment. Il indique surtout un besoin d'espace, de clarte ou de soutien.")
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Conseils doux" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Les conseils de Popi" })).toBeInTheDocument();
   });
 
   it("calcule les niveaux faible, modere et eleve selon la valeur", async () => {

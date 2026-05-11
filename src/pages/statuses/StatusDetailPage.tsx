@@ -132,7 +132,7 @@ export default function StatusDetailPage() {
           </section>
 
           <section className="status-detail-page__section" aria-labelledby="status-tips-title">
-            <h2 id="status-tips-title">Conseils doux</h2>
+            <h2 id="status-tips-title">Les conseils de Popi</h2>
             <ul className="status-detail-page__tips">
               {selectedTips.slice(0, 5).map((tip) => (
                 <li key={tip}>{tip}</li>
